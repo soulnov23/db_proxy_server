@@ -1,0 +1,144 @@
+//=============================================================================
+// 在线状态协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+
+package IM.UserState;
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id:	0x0023
+
+//服务器间向状态服务节点发起用户状态信息更新通知
+message UserStatUpdateBroadcastReq{
+    //cmd id:           0x0801
+	required uint32 company_id = 1;		//企业ID
+	required uint32 user_id = 2;
+	required IM.BaseDefine.ClientType client_type=3;//终端类型
+	required IM.BaseDefine.UserStatType status = 4;
+	required uint32 	connsvr_id=5;			// 4 byte
+	required uint32 	connsocket_index=6;		// 4 byte
+	required uint64     offline_time = 7;
+}
+
+//用户状态信息更新通知(s2s 服务器内部协议)
+message UserStatUpdatePush{
+    //cmd id:           0x0802
+	required uint32 company_id = 1;		//企业ID
+	required uint32 user_id = 2;
+	required IM.BaseDefine.ClientType client_type=3;//终端类型
+	required IM.BaseDefine.UserStatType status = 4;
+	required uint32 	connsvr_id=5;			// 4 byte
+	required uint32 	connsocket_index=6;		// 4 byte
+	required uint64     offline_time = 7;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+// 客户端在线状态协议
+// 更新日期: 2016.12.15
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+///////////////////////////////////////////////////////////////////////////////
+
+
+message DeviceStatItem{
+	required IM.BaseDefine.UserStatType status = 1;
+	required IM.BaseDefine.ClientType client_type = 2;
+}
+
+message UserStatItem{
+	required uint32 company_id = 1;		//企业ID
+	required uint32 user_id = 2;
+	repeated DeviceStatItem stat_item = 3; //数组为空时代表所有设备均不在线
+}
+
+// 接收服务端推送的用户状态信息
+message ServerPullUsersStat{
+	//cmd id:		0x0803
+    required uint32 list_type = 1; //推送的好友列表类型  0-被订阅用户的实时状态推送;1-好友列表状态推送
+	repeated UserStatItem user_stat_list = 2;
+	optional bytes attach_data = 20;
+}
+
+// 客户端请求指定联系人状态
+message IMUsersStatReq{	
+	//cmd id:		0x0804
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.UserIdItem user_id_list = 3;		//企业ID
+	optional bytes attach_data = 20;
+}
+
+message IMUsersStatRsp{
+	//cmd id:		0x0805
+	repeated UserStatItem user_stat_list = 1;
+	optional bytes attach_data = 20;
+}
+
+// 用户自己状态变更广播请求(主要用于离开状态更新)
+message IMUserStatNotify{
+	//cmd id:		0x0806
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required DeviceStatItem status = 3;
+	optional bytes attach_data = 20;
+}
+
+/////////////////////////////////////////
+// 状态推送开关
+/////////////////////////////////////////
+
+// 客户端发送开始接收状态的开关 bob 2016.12.15
+// 不需要返回
+// 通过状态推送 ServerPullUsersStat
+message IMUsersStat_Start_Req{	
+	//cmd id:		CID_USER_STATE_START_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	optional bytes attach_data = 20;
+}
+
+/////////////////////////////////////////
+// 临时订阅
+/////////////////////////////////////////
+
+// 增加临时订阅 bob 2016.12.15
+// 不需要返回
+// 通过状态推送 ServerPullUsersStat,增加返回的状态就可以 (对群组/组织架构状态的获取没影响)
+message IMUsersStat_TempUser_Subs_Req{	
+	//cmd id:		CID_USER_STATE_TMP_SUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.UserIdItem user_id_list = 3;			
+	optional bytes attach_data = 20;
+}
+
+// 取消临时订阅 bob 2016.12.15
+// 不需要返回
+// 不再推送指定人员的状态(对群组/组织架构状态的获取没影响)
+message IMUsersStat_TempUser_UnSubs_Req{	
+	//cmd id:		CID_USER_STATE_TMPUSER_UNSUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.UserIdItem user_id_list = 3;		
+	optional bytes attach_data = 20;
+}
+
+message IMCompanyOrgUpdateNotify{
+	//cmd id:		CID_COMPANY_ORG_UPDATE_NOTIFY
+	required uint32 company_id = 1;		
+}

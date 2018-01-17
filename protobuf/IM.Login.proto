@@ -1,0 +1,202 @@
+//=============================================================================
+// 登录相关协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+package IM.Login;
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id:	0x0001
+
+message IMMsgServReq{
+	//CID_LOGIN_REQ_CONNECTIONSERVER
+	//cmd id:		0x0101
+	//获取可用链接服务器
+	
+	optional uint32 company_id = 1;	//+ bob 2016.06.28 企业ID
+}
+
+message IMMsgServRes{
+	//cmd id:		0x0102
+	//CID_LOGIN_RES_CONNECTIONSERVER
+	//返回可用链接服务器
+	
+	required IM.BaseDefine.ResultType result_code = 1;
+	optional string ip = 2;					//链接服务器IP
+	optional uint32 port = 3;				//链接服务器port
+	optional string backip_ip = 4; 			//备选链接服务器IP
+	optional uint32 backip_port = 5;		//备选链接服务器port
+}
+
+// << 登录请求
+message IMLoginReq{
+	//cmd id:		0x0103
+	//CID_LOGIN_REQ_USERLOGIN
+	//请求登录
+	
+	required uint32 company_id = 1;	//+ bob 2016.06.28 企业ID
+	required string user_name = 2;
+	required string password = 3;
+	required IM.BaseDefine.UserStatType online_status = 4;
+	required IM.BaseDefine.ClientType client_type = 5;
+	optional uint64 update_time = 6;
+	optional string client_ver = 7;			//客户端版本号 bob 2017.03.15
+}
+
+// 登录返回
+message IMLoginRes{
+	//cmd id:		0x0104
+	//CID_LOGIN_RES_USERLOGIN
+	//登录结果
+	required uint64 server_time = 1;
+	required IM.BaseDefine.LoginResultCode result_code = 2;
+	required IM.BaseDefine.UserStatType online_status = 3;
+	optional string user_session = 4;
+	optional IM.BaseDefine.UserInfo user_info = 5;
+	optional uint64 pc_last_offline_time = 6;		//PC端上次离线时间
+	optional uint64 phone_last_offline_time = 7;	//移动端端上次离线时间
+	optional string new_client_ver          = 8;	//最新客户端版本号 预留 bob 2017.03.15
+}
+
+message IMLogoutReq{
+	//cmd id:		0x0105
+	//CID_LOGIN_REQ_LOGINOUT	
+	//请求注销
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+	required uint32 user_id = 2;						//+ jcj  20160901
+	required IM.BaseDefine.ClientType client_type = 3;	//+ bob 2016.06.28 企业ID
+	
+}
+
+message IMLogoutRes{
+	//cmd id:		0x0106
+	//CID_LOGIN_REQ_LOGINOUT	
+	//请求结果
+
+	required IM.BaseDefine.LoginResultCode result_code = 1;
+	
+}
+
+message IMKickUser{
+	//cmd id:		0x0107
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+	required uint32 user_id = 2;
+	required IM.BaseDefine.KickReasonType kick_reason = 3;
+}
+
+message IMDeviceTokenReq{
+	//cmd id:		0x0108
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID	
+	required uint32 user_id = 2;
+	required string device_token = 3;
+	optional IM.BaseDefine.ClientType client_type = 4;
+	optional bytes attach_data = 20;
+}
+
+message IMDeviceTokenRsp{
+	//cmd id: 		0x0109
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID	
+	required uint32 user_id = 2;
+	optional bytes attach_data = 20;
+}
+
+//移动端、PC端相互踢下线请求
+message IMKickOtherClientReq{
+	//cmd id:		0x010a
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+	required uint32 user_id = 2;
+	required IM.BaseDefine.ClientType client_type = 3;
+}
+
+message IMKickOtherClientRsp{
+	//cmd id: 		0x010b
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+	required uint32 user_id = 2;
+	required IM.BaseDefine.OptResultCode result_code = 3;
+}
+
+
+// 一旦设置以后，22:00 -- 07:00不发送
+message IMPushShieldReq {
+    //cmd id:			0x010c
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required uint32 shield_status = 3;// 1:开启，0：关闭
+    optional bytes attach_data = 20;  // 服务端用，客户端不用设置
+}
+
+message IMPushShieldRsp {
+    //cmd id:			0x010d
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required IM.BaseDefine.OptResultCode result_code = 3;			// 值： 0:successed 1:failed
+    optional uint32 shield_status = 4;          // 值： 如果result_code值为0(successed)，则shield_status值设置， 1:开启， 0:关闭
+
+    optional bytes attach_data = 20;            // 服务端用，客户端不用设置
+}
+
+// 如果用户重新安装app，第一次启动登录成功后，app主动查询
+// 服务端返回IMQueryPushShieldRsp
+message IMQueryPushShieldReq {
+    //cmd id:			0x010e
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    optional bytes attach_data = 20;// 服务端用，客户端不用设置
+}
+
+message IMQueryPushShieldRsp {
+    //cmd id:			0x010f
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required IM.BaseDefine.OptResultCode result_code = 3;			// 值： 0:successed 1:failed
+    optional uint32 shield_status = 4;          // 值： 如果result_code值为0(successed)，则shield_status值设置， 1:开启， 0:关闭
+    optional bytes attach_data = 20;
+}
+
+//修改密码协议
+message IMModifyPswdReq{
+	//cmd id:			0x0112
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+	required string old_pswd = 3;
+	required string new_pswd = 4;	
+}
+message IMModifyPswdRsp{
+	//cmd id:			0x0113
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+    required IM.BaseDefine.OptResultCode result_code = 3; //  1:ok  other: false		    
+}
+
+// 其它服务器发起用户变更请求(s2s服务端内部协议,主要用于离开状态更新)
+message IMUserStatUpdateReq{
+	//cmd id:		0x0114
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required IM.BaseDefine.UserStatType status = 3;
+	required IM.BaseDefine.ClientType client_type = 4;
+	optional bytes attach_data = 20;
+}
+
+//  获取角色、权限获取
+message IMUserRoleAuthorityReq{
+    //cmd id:		CID_LOGIN_ROLE_AUTHORITY_REQ  0x0115
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+}
+
+//  获取角色、权限返回
+message IMUserRoleAuthorityRsp{
+    //cmd id:		CID_LOGIN_ROLE_AUTHORITY_RSP  0x0116
+    repeated IM.BaseDefine.IMUserRole role = 1;
+}

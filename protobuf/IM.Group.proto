@@ -1,0 +1,396 @@
+//=============================================================================
+// 群组操作相关协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+syntax = "proto2";
+package IM.Group;
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id:0x0004
+
+//==========================================================
+// 群列表、群信息
+//==========================================================
+
+//---------------------------------
+// 群列表信息请求
+// 100项一个包
+//---------------------------------
+message IMGroupListReq{
+	//cmd id:			0x0401
+	required uint32 company_id = 1;					
+	required uint32 user_id = 2;
+	required uint64 update_time = 3;  			//本地缓存的更新时间戳
+	optional bytes attach_data = 20;
+}
+
+// 群列表信息返回
+message IMGroupListRsp{
+	//cmd id:			0x0402
+	required uint64 update_time = 1;			//服务器最新的更新时间戳
+	required uint32 is_more_data = 2;		//是否还有数据 0-没数据，1-有数据
+	repeated IM.BaseDefine.GroupInfo group_info_list = 3; 
+	optional bytes attach_data = 20;
+}
+
+//---------------------------------
+// 单个群或陌生群详细信息请求
+message IMGroupInfoReq{
+	//cmd id:			0x0403
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.GroupListItem group_item_list = 3;		 	 	
+	optional bytes attach_data = 20;
+}
+
+// 群详细信息返回
+message IMGroupInfoRsp{
+	//cmd id:			0x0404
+	repeated IM.BaseDefine.GroupInfo group_info_list = 1;
+	optional bytes attach_data = 20;
+}
+
+
+//---------------------------------
+// 获取群成员列表请求
+// 200个分一包
+message IMGroupMemberListReq{
+	//cmd id:			0x0405
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32 dest_company_id = 3;
+	required uint32 dest_group_id = 4;	
+    required IM.BaseDefine.GroupType group_type = 5; 
+	required uint64 update_time = 6;
+	optional bytes attach_data = 20;
+}
+
+// 群成员列表返回
+message IMGroupMemberListRsp{
+	//cmd id:			0x0406
+	required uint32 company_id = 1;
+	required uint32 group_id = 2;	
+	required uint32 is_more_data = 3;		//是否还有数据 0-没数据，1-有数据
+	required uint64 update_time = 4;
+	repeated IM.BaseDefine.GroupMemberItem group_member_list = 5;
+	optional bytes attach_data = 20;
+}
+  
+//==========================================================
+// 群操作
+//==========================================================
+// 创建群请求
+message IMGroupCreateReq{
+	//cmd id:			0x0407
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;		//客户端只能创建多人回话
+	required string group_name = 4;
+	required string group_avatar = 5;
+	repeated IM.BaseDefine.UserIdItem member_id_list = 6; 
+	optional string topic            =7;    //主题
+	optional bytes attach_data = 20;
+}
+
+// 创建群返回 
+// + 增加返回群组ID bob 2016.08.22
+message IMGroupCreateRsp{
+	//cmd id:			0x0408
+	required IM.BaseDefine.OptResultCode result_code = 1;	// 0-成功，1-失败
+	required IM.BaseDefine.GroupType group_type = 2;
+	required uint32 company_id = 3;		
+	required uint32 group_id = 4;
+	repeated IM.BaseDefine.UserIdItem member_id_list = 5; //群成员列表
+	required uint64 memberlist_update_time = 6; //群成员列表更新时间
+	required uint32 user_id = 7;
+	optional bytes attach_data = 20;
+}
+
+// 解散群请求
+message IMGroupDissolveReq{
+	//cmd id:			0x0409
+	required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;	
+}
+
+// 解散群返回
+message IMGroupDissolveRsp{
+	//cmd id:			0x040a
+	required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;
+	required IM.BaseDefine.OptResultCode result_code = 4;
+}
+
+// 群操作通知
+message IMGroupOptNotify{
+	//cmd id:			0x040b
+	required uint32 opt_type = 1;	// 1-入群  0-解散群
+	required IM.BaseDefine.GroupListItem group_item_info = 2;
+}
+
+// 群资料修改 
+message IMGroupInfoModifyReq{
+	//cmd id:			0x0413
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;		//客户端只能创建多人回话
+	required uint32 group_company_id = 4;	
+	required uint32 group_id = 5;	
+	required string group_name = 6;
+	required string group_avatar = 7;
+	optional string topic        =8;    //主题
+	optional bytes attach_data = 20;
+}
+
+// 群资料修改返回
+// + 增加返回群组ID bob 2016.08.22
+message IMGroupInfoModifyRsp{
+	//cmd id:			0x0414
+	required IM.BaseDefine.OptResultCode result_code = 1;	// 0-成功，1-失败
+	required IM.BaseDefine.GroupType group_type = 2;
+	required uint32 company_id = 3;	
+	required uint32 user_id = 4;
+	required uint32 group_company_id = 5;
+	required uint32 group_id = 6;
+	required uint64 update_time = 7;
+	optional BaseDefine.GroupInfo group_info = 8;
+	optional bytes attach_data = 20;
+
+}
+
+// 群资料修改通知
+message IMGroupInfoModifyNotify{
+	//cmd id:			CID_GROUP_INFO_MODIFY_NOTIFY
+	required IM.BaseDefine.GroupType group_type = 2;
+	required uint32 company_id = 3;		
+	required uint32 group_id = 4;
+	required uint64 update_time = 5;
+	required BaseDefine.GroupInfo group_info = 6;
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 用户、成员操作
+//==========================================================
+// 1. change_type = ADD
+//	  1.1 user_id = UserIdItem.user_id，表示用户主动加群；
+//    1.2 user_id != UserIdItem.user_id，表示用户被邀请加群；
+// 2. change_type = DEL
+//	  2.1 user_id = UserIdItem.user_id，表示用户退群；
+//    2.2 user_id != UserIdItem.user_id，表示用户被踢出群；
+// 3. change_type = MODIFY
+//	  表示用户修改自己的群昵称，user_id = user_id = UserIdItem.user_id
+// 群成员变更请求
+message IMGroupChangeMemberReq{
+	//cmd id:			0x040c
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;
+	required IM.BaseDefine.GroupMemberOptType change_type = 3;		//add、del、modify
+	required IM.BaseDefine.GroupListItem group_item_info = 4;	//群基本信息
+	repeated IM.BaseDefine.UserIdItem member_id_list = 5;
+	optional bytes attach_data = 20;
+}
+
+// 群成员变更返回
+message IMGroupChangeMemberRsp{
+	//cmd id:			0x040d
+	required uint32 user_id = 1;
+	required IM.BaseDefine.GroupMemberOptType change_type = 2;
+	required IM.BaseDefine.OptResultCode result_code = 3;
+	required IM.BaseDefine.GroupListItem group_item_info = 4;	//群基本信息
+	repeated IM.BaseDefine.UserIdItem chg_user_id_list = 5;		//变动的成员id,add: 表示添加成功的id,   del: 表示删除的id
+	optional bytes attach_data = 20;
+}
+
+// 群成员变更通知(广播通知其他群成员)
+message IMGroupChangeMemberNotify{
+	//cmd id: 			0x040e
+	required IM.BaseDefine.GroupMemberOptType change_type = 1;
+	required IM.BaseDefine.GroupListItem group_item_info = 2;	//群基本信息
+	repeated IM.BaseDefine.UserIdItem chg_user_id_list = 3;		//add: 表示添加成功的id,   del: 表示删除的id
+}
+
+// 群转让
+message IMGroupSetOwnerReq{
+	//cmd id: 			0X0419
+	required uint32 group_company_id = 1;		
+	required uint32 group_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;
+	
+	required uint32 from_company_id = 4;	  //转让者公司id
+	required uint32 from_user_id = 5;
+	required uint32 to_company_id = 6;	  	  //被转让者公司id
+	required uint32 to_user_id = 7;
+}
+
+message IMGroupSetOwnerRsp{
+	//cmd id: 			0X041a
+	required uint32 group_company_id = 1;		
+	required uint32 group_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;
+	required uint32 from_company_id = 4;	  //转让者公司id
+	required uint32 from_user_id = 5;
+	required uint32 to_company_id = 6;	  	  //被转让者公司id
+	required uint32 to_user_id = 7;
+	required IM.BaseDefine.OptResultCode result_code = 8;
+}
+
+message IMGroupSetOwnerNotify{
+	//cmd id: 	CID_GROUP_OWNER_SET_NOTIFY
+	required uint32 group_company_id = 1;		
+	required uint32 group_id = 2;
+	required IM.BaseDefine.GroupType group_type = 3;
+	required uint32 from_company_id = 4;	  //转让者公司id
+	required uint32 from_user_id = 5;
+	required uint32 to_company_id = 6;	  	  //被转让者公司id
+	required uint32 to_user_id = 7;
+	//required IM.BaseDefine.OptResultCode result_code = 5;
+}
+
+// 群免打扰操作请求
+message IMGroupDisturbOptReq{
+	//cmd id: 	CID_GROUP_DISTURB_OPT_REQ
+    required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32 group_company_id = 3;			
+	required uint32 group_id = 4;
+	required IM.BaseDefine.GroupType group_type = 5;	
+	required uint32 not_disturb = 6;		//1 开启免打扰 0关闭免打乱
+}
+
+// 群免打扰操作返回
+message IMGroupDisturbOptRsp{
+	//cmd id: 	CID_GROUP_DISTURB_OPT_RSP
+	 required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32 group_company_id = 3;			
+	required uint32 group_id = 4;
+	required IM.BaseDefine.GroupType group_type = 5;	
+	required uint32 not_disturb = 6;		//1 开启免打扰 0关闭免打乱
+	required IM.BaseDefine.OptResultCode result_code = 7;
+}
+
+/////////////////////////////////////////
+// 群组 和组织架构 订阅
+/////////////////////////////////////////
+
+// 增加临时订阅 bob 2016.12.15
+// 不需要返回
+// 通过状态推送 ServerPullUsersStat,增加返回的状态就可以 (对群组/组织架构状态的获取没影响)
+message IMUsersStat_Group_Subs_Req{	
+	//cmd id:		CID_USER_STATE_GROUP_SUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32 group_company_id=3;
+	required uint32  group_id = 4;
+	required IM.BaseDefine.GroupType group_type=5;
+	optional bytes attach_data = 20;
+}
+
+message IMUsersStat_Group_UnSubs_Req{	
+	//cmd id:		CID_USER_STATE_GROUP_UNSUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32 group_company_id=3;
+	required uint32  group_id = 4;
+	required IM.BaseDefine.GroupType group_type=5;	
+	optional bytes attach_data = 20;
+}
+
+
+//当前节点(不包含子节点)订阅
+// 取消临时订阅 bob 2016.12.15
+// 不需要返回
+// 不再推送指定人员的状态(对群组/组织架构状态的获取没影响)
+message IMUsersStat_OrgNode_Subs_Req{	
+	//cmd id:		CID_USER_STATE_ORGNODE_SUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32  group_id = 3;		
+	optional bytes attach_data = 20;
+}
+
+message IMUsersStat_OrgNode_UnSubs_Req{	
+	//cmd id:		CID_USER_STATE_ORGNODE_UNSUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint32  group_id = 3;			
+	optional bytes attach_data = 20;
+}
+
+message TerminalState{
+	required IM.BaseDefine.ClientType     type  = 1;
+	required IM.BaseDefine.UserStatType   state = 2;
+	
+}
+message IMUsersStat_Changed_User{
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated TerminalState  terminal_state_list=3;
+}
+
+message IMUsersStat_Changed_User_Notify{	
+	//cmd id:		CID_USER_STATE_CHANGED_NOTIFY
+				
+	repeated IMUsersStat_Changed_User user_list = 1;			
+	optional bytes attach_data = 20;
+}
+
+//节点在线人数
+message OrgNode_Online{
+	required uint32 group_id = 1;   //节点id
+	required uint32 onlines = 2;    //在线人数
+}
+
+//org树在线人数订阅
+message IMUsersStat_OrgTree_Subs_Req{	
+	//cmd id:		CID_USER_STATE_ORGTREE_SUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;		
+	optional bytes attach_data = 20;
+}
+
+message IMUsersStat_OrgTree_UnSubs_Req{	
+	//cmd id:		CID_USER_STATE_ORGTREE_UNSUBS_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;		
+	optional bytes attach_data = 20;
+}
+
+//服务端不定时通知
+message IMUsersStat_OrgTree_Notify{	
+	//cmd id:		CID_USER_STATE_ORGTREE_NOTIFY
+	required uint32 company_id = 1;			
+	repeated OrgNode_Online org_node_list = 2;			
+	optional bytes attach_data = 20;
+}
+
+
+
+//only group->connection
+message GTCGroupOptNotify{
+	required IMGroupOptNotify   notify = 1;
+	repeated uint32  socket_id = 2;
+}
+
+message GTCGroupInfoModifyNotify{
+	required IMGroupInfoModifyNotify   notify = 1;
+	repeated uint32  socket_id = 2;
+}
+
+message GTCGroupChangeMemberNotify{
+	required IMGroupChangeMemberNotify   notify = 1;
+	repeated uint32  socket_id = 2;
+}

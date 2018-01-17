@@ -1,0 +1,48 @@
+syntax = "proto2";
+package IM.DTG;
+import "IM.BaseDefine.proto";
+  //仅用于groupserver和db通信
+
+option optimize_for = LITE_RUNTIME;
+message DTGroupCreateReq{
+	//cmd id:			0x0405
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;
+	required uint32 group_id = 3;
+	required IM.BaseDefine.GroupType group_type = 4;		//默认是创建临时群，且客户端只能创建多人回话
+	required string group_name = 5;
+	required string group_avatar = 6;
+	repeated IM.BaseDefine.UserIdItem member_id_list = 7; 
+	optional string topic                            =8;    //主题
+	optional bytes attach_data = 20;
+}
+
+// 创建群返回 
+message DTGroupCreateRsp{
+	//cmd id:			0x0406
+	required IM.BaseDefine.OptResultCode result_code = 1;	// 0-成功，1-失败
+	required uint32 company_id = 2;		
+	required uint32 group_id = 3;   
+	repeated IM.BaseDefine.UserIdItem member_id_list = 4; //群成员列表
+	required uint64 memberlist_update_time = 5; //群成员列表更新时间
+	required IM.BaseDefine.GroupType group_type =6;
+	required uint32 user_id = 7;
+	optional bytes attach_data = 20;
+}
+
+message DTGMsg{
+	//cmdid:		0x0301
+	required IM.BaseDefine.MsgData	msg_data = 1;
+	optional IM.BaseDefine.UserIdItem   member_id_list = 2;//离线人列表
+	optional bytes attach_data = 11;
+}
+
+message DTGMsgList{
+	//cmdid:		0x0301
+	repeated DTGMsg	msg_list = 1;
+}
+
+
+
+
+

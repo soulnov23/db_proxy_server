@@ -1,0 +1,151 @@
+//=============================================================================
+// 服务器路由协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+syntax = "proto2";
+
+package IM.Server;
+import "IM.BaseDefine.proto";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id:   0x0022
+
+message PayloadInfo{
+	optional uint32 resource_payload = 1;
+	optional uint32 max_resource_num = 2;
+}
+
+message ServerStatus{
+	required uint32 node_id = 1;
+	repeated IM.BaseDefine.ServiceID service_type = 2; 	
+	required string server_ip = 3;
+	required uint32 server_port = 4;
+	required bool is_enable = 5; 
+
+	optional PayloadInfo payload = 6;
+}
+
+//客户端向router服务器注册状态信息
+message RegisterServerReq{
+	//cmd id: 0x2201
+	required ServerStatus current_server = 1;
+}
+
+message RegisterServerRsp{
+	//cmd id: 0x2202
+	required IM.BaseDefine.ResultType result_code = 1;
+	required uint32 node_id = 2;
+	required bool is_enable = 3;
+} 
+
+//客户端向router服务器请求服务器节点状态
+message GetAllServerStatusReq{
+	//cmd id: 0x2203
+}
+
+message GetAllServerStatusRsp{
+	//cmd id: 0x2204
+	required IM.BaseDefine.ResultType result_code = 1;
+	repeated ServerStatus server_list = 2;
+}
+
+//向router服务器报告状态，每隔一段时间报告一次
+message ServerStatusUpdateReq{
+	//cmd id: 0x2205
+	required uint32 node_id = 1;
+	required uint32 resource_payload = 2;
+}
+
+message ServerStatusUpdateRsp{
+	//cmd id: 0x2206
+	required IM.BaseDefine.ResultType result_code = 1;
+}
+
+//router服务器广播其他客户的状态变更消息
+message ServerStatusPush{
+	//cmd id: 0x2207
+	repeated ServerStatus server_list = 1;
+	repeated ServerStatus add_server_list = 2;
+	repeated ServerStatus del_server_list = 3;
+}
+
+message MessageHeader{
+	required uint32 service_type = 1;
+	required uint32 cmd_id = 2;
+	required uint32 message_size = 3;
+}
+
+//客户端希望服务器广播的请求
+message BroadcastMessageReq{
+	//cmd id: 0x2208
+	required MessageHeader header = 1;
+	optional bytes message_serialize = 2;
+	// the target service type, none for all
+	repeated uint32 target_services = 3;
+}
+
+message BroadcastMessageRsp{
+	//cmd id: 0x2209
+	required IM.BaseDefine.ResultType result_code = 1;
+}
+
+//服务器广播消息
+message BroadcastPush{
+	//cmd id: 0x220a
+	required MessageHeader header = 1;
+	optional bytes message_serialize = 2;
+}
+
+message ConnNode{
+    required string    ip =  1;
+    required uint32    port = 2;
+    required uint32    max_load = 3;
+    required uint32    cur_load = 4;
+    required uint32    is_ssl = 5;    //0-非SSL端口,1-SSL端口
+}
+
+message SrvAddrNode{
+    required string    ip =  1;
+    required uint32    port = 2;
+    required uint32    is_ssl = 3;    //0-非SSL,1-SSL
+}
+
+
+//连接服务器向路由节点报告连接承载信息(连接服务节定时主动报送)
+message ConnSrvStatusReport{
+    //cmd id: 0x220b
+    repeated ConnNode  ConnNodeList = 1;
+}
+
+
+//http节点向路由节点获取客户端连接配置列表及状态
+message ConnSrvListStatusReq{
+    //cmd id: 0x220c
+}
+
+//http节点向路由节点获取客户端连接配置列表及状态(路由节主动推送)
+message ConnSrvListStatusPush{
+    //cmd id: 0x220d
+    repeated ConnNode     ConnNodeList = 1;       //C2S连接开放列表
+	repeated SrvAddrNode  FileSrvList = 2;        //文件服务器列表
+	repeated SrvAddrNode  CommentSrvList = 4;     //标签服务器列表
+}
+
+//router向客户推送该节点停止服务消息
+message ServerStopPush{
+	//cmd id: 0x220e
+}
+
+//router向客户推送该节点停止服务消息
+message ServerLocalCacheRefreshNotify{
+	//cmd id: 0x220f
+    required uint32    param = 1; //附加参数,用于控制刷新指定项内容,由各节点自定义使用
+}
+
+

@@ -1,0 +1,189 @@
+//=============================================================================
+// 单人消息相关协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+package IM.Message;
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id  0x0003
+
+
+
+//==========================================================
+// 消息
+//==========================================================
+// 消息(点对点、群组、架构都可以复用)
+message IMMsg{
+	//cmd id:		
+	//(C2S)0x0301  
+	//(S2S)//0x0316离线消息   //0x0317在线消息
+	required IM.BaseDefine.MsgData	msg_data = 1;
+	optional bytes attach_data = 11;
+}
+
+//群消息 only group->connection
+message GTCMsg{
+	required IMMsg   msg = 1;
+	repeated uint32  socket_id = 2;
+}
+
+// 个人消息发送已收确认(单点、群组消息处理)
+message IMMsgRecvAck{
+	//cmd id:		0x0302
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;				//消息发送方
+	required uint32 to_company_id = 3;
+	required uint32 to_user_id = 4;					//消息接受方
+	required IM.BaseDefine.SessionType session_type = 5; //会话类型	
+	required string msg_id = 6;
+	optional bytes attach_data = 7;
+}
+
+// 消息属性状态操作通知(回执[已读]、撤回)
+message IMMsgOptNotify{
+	//cmd id:		0x0303
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;				//消息发送方
+	required uint32 to_company_id = 3;
+	required uint32 to_user_id = 4;					//消息接受方（单点会话用user_id,群会话用group_id）
+	required IM.BaseDefine.SessionType session_type = 5; //会话类型	
+	required string msg_id = 6;
+	required IM.BaseDefine.MsgProperty msg_property = 7;	//消息属性(正常消息、回执消息、紧急消息)
+	optional bytes attach_data = 8;
+}
+
+
+// 获取回执消息详情，主要用于群会话(分包，每次100)
+message IMMsgReceiptListReq{
+	//cmd id:		0x0306
+	required uint32 company_id = 1;
+	required uint32 user_id = 2;
+	required uint32 group_company_id = 3;
+	required uint32 group_id = 4;
+	required string msg_id = 5;
+	required uint64 update_time = 7; 	
+	optional bytes attach_data = 20;	
+}
+
+message IMMsgReceiptListRsp{
+	//cmd id:		0x0307
+	required string msg_id = 1;
+	required uint32 group_company_id = 2;
+	required uint32 group_id = 3;
+	repeated IM.BaseDefine.UserIdItem receipt_user_list = 4;
+	required uint32 is_more_data = 5;		//是否还有数据 0-没数据，1-有数据
+	required uint64 update_time = 6;
+	optional bytes attach_data = 20;	
+}
+
+//==========================================================
+// 离线消息个数
+//==========================================================
+message IMOfflineMsgCntReq{
+	//cmd id:		0x030a
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;
+	optional bytes attach_data = 20;	
+}
+
+message IMOfflineMsgCntRsp{
+	//cmd id:		0x030b
+	repeated IM.BaseDefine.OfflineMsgCntInfo offline_msg_list = 1;
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 历史/离线消息列表详情(根据消息个数返回信息执行消息列表请求)
+// 每次返回30条消息记录，实际由服务端根据数据大小做控制
+//==========================================================
+message IMGetMsgDataListReq{
+	//cmd id:		0x030c 历史消息
+	//cmd id:		0x030e 离线消息
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;	//请求的来源
+	required uint32 to_company_id = 4;
+	required uint32 to_user_id = 5;		//与这账号的记录或者是群
+	required IM.BaseDefine.SessionType session_type = 6;
+	required uint64 latest_msg_time = 7;	//上一次消息的time
+	optional uint64 end_msg_time = 8;	//0：拉到现在  非0：一段时间内的
+	optional bytes attach_data = 20;
+}
+
+//对于群而言，如果消息数目返回的数值小于请求的cnt,则表示群的消息能拉取的到头了，更早的消息没有权限拉取。
+//如果msg_cnt 和 msg_id_begin计算得到的最早消息id与实际返回的最早消息id不一致，说明服务器消息有缺失，需要
+//客户端做一个缺失标记，避免下次再次拉取。
+message IMGetMsgDataListRsp{
+	//cmd id:		0x030d
+	required uint32 is_more_data = 1;		//是否还有数据 0-没数据，1-有数据
+	repeated IM.BaseDefine.MsgData	msg_data_list = 2;
+	optional uint32 company_id = 3;
+	optional uint32 user_id = 4;		//与这账号的记录或者是群
+	optional IM.BaseDefine.SessionType session_type = 5;
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// MsgId、Msg
+//==========================================================
+message IMGetLatestMsgIdReq{
+	//cmd id: 		0x030e
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;
+	required IM.BaseDefine.SessionType session_type = 3;
+	required uint32 to_company_id = 4;						
+	required uint32 to_user_id = 5;//用户账号 或者是群账号
+	optional bytes attach_data = 20;
+}
+
+message IMGetLatestMsgIdRsp{
+	//cmd id:		0x030f
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;
+	required IM.BaseDefine.SessionType session_type =3;
+	required uint32 to_company_id = 4;						
+	required uint32 to_user_id = 5;//用户账号 或者是群账号
+	required string latest_msg_id = 6;
+	optional bytes attach_data = 20;
+}
+
+// 根据消息ID获取消息内容
+message IMGetMsgByIdReq{
+	//cmd id: 		0x0310
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;
+	required uint32 to_company_id = 4;						
+	required uint32 to_user_id = 5;	//用户账号 或者是群账号
+	required IM.BaseDefine.SessionType session_type = 6;
+	repeated string msg_id_list = 7;
+	optional bytes attach_data = 20;
+}
+
+message IMGetMsgByIdRsp{
+	//cmd id:		0x0311
+	repeated IM.BaseDefine.MsgData	msg_data = 1;
+	optional bytes attach_data = 20;
+}
+
+// P2P消息(抖屏、正在输入。。。)
+message IMP2PCmdMsg{
+	//cmd id:		0x0318
+	required uint32 from_company_id = 1;
+	required uint32 from_user_id = 2;
+	required uint32 to_company_id = 3;						
+	required uint32 to_user_id = 4;	
+	required IM.BaseDefine.P2PMsgCmdType p2p_msg_type = 5;
+}
+

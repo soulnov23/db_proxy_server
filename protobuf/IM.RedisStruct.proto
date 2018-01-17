@@ -1,0 +1,168 @@
+syntax = "proto2";
+
+
+//redis 缓存结构
+//公司信息
+message CompanyInfo {
+ 	required uint32  company_id = 1;	
+	required string	 company_name = 2;  //200 byte         
+	required string  company_code = 3;   //60 byte        
+    required string  company_scale=4;   //40 byte        
+	required uint32  user_count=5;      //4 byte     
+	required uint32	 active=6;          //2 byte 
+ 	required string  address=7;   		//200 byte
+	required string  country=8;   		//100 byte
+    required int32	 auth_status=9;		//4 byte
+	required string	 contractor_name=10;	//100 byte
+    required string	 contractor_email=11;	//100 byte
+    required string	 contractor_tel=12;	//20 byte
+	required string	 contractor_mobile=13; //20 byte
+    required uint32  create_time=14;			//4 byte
+    required uint32  update_time=15;			//4 byte
+}
+//用户信息
+message UserInfo{
+	required uint32 company_id = 1;		//+ bob 企业ID
+	required uint32 user_id = 2;
+	required uint32 user_gender = 3; 	// 用户性别,男：1 女：2 人妖/外星人：0
+	required string user_nick_name = 4;	//绰号
+	required string avatar_url = 5;
+    required uint64 avatar_update_time = 6;      //+ bob 头像版本号
+	required string email = 7;
+	required string user_real_name = 8;	//真名
+	required string user_mobile = 9;
+	required string user_tel = 10;
+	required string user_english_name = 11;
+    required uint32 status = 12;        //0:在职  1. 试用期 2. 正式 3. 离职 4.实习,  client端需要对“离职”进行不展示
+	required uint32 user_borndate = 13; //用户生日
+	required uint64 update_time = 14;	
+	required uint32 work_id = 15;	
+	required string pos_json = 16;
+    optional string sign_info = 17;        
+}
+//全局session信息表
+message GlobalSesssion{
+	required uint32 	company_id=1;			// 4 byte
+	required uint32 	user_id=2;				// 4 byte
+	required uint32 	connsvr_id=3;			// 4 byte
+	required uint32 	connsocket_index=4;		// 4 byte
+	required uint32		device_type=5;			//终端类型 定义见 IM.BaseDefine.ClientType
+	required uint32		device_stat=6;			//终端状态,定义值依据IM::BaseDefine::UserStatType
+	required uint32 	update_time=7;			//更新时间
+}
+//全局链接表
+message ConnSessionItem{
+	required string	    session_id=1;			//GlobalSesssion key
+	required uint32 	update_time=2;			//更新时间
+}
+//用户状态表
+message UserStat {
+   required uint32 		update_time=1;			//更新时间
+   required uint32 	    online_device=2;		// 1 byte  按位掩码 1:PC端,2:android端,4:IOS端 8:mac
+   optional string		pc_session_id=3;		//25 byte
+   optional string		android_session_id=4;	//25 byte
+   optional string		ios_session_id=5;		//25 byte
+    optional string		mac_session_id=6;	//25 byte
+}
+//用户好友关系
+message UserFriendItem {
+  required uint32 		company_id=1;			// 4 byte
+  required uint32 		user_id=2;				// 4 byte
+  required uint32		is_fixtop=3;				// 1 byte
+  required uint32	    fix_order=4;				// 2 byte
+  required string       remark=6;					//30 byte
+  required uint64       update_time = 7;		//8 byte
+  required bool 	    is_delete   = 8;
+}
+//用户好友关系列表
+message UserFriendList {
+  repeated UserFriendItem friend_list = 1;     //max 500 item
+}
+//用户好友更新时间
+message UserFriendVerItem {
+  required uint32 		company_id=1;			// 4 byte
+  required uint32 		user_id=2;				// 4 byte
+  required uint64		update_time=3;		// 8 byte
+}
+//用户登录之后的session
+message UserSession{
+   required uint32 		company_id=1;			// 4 byte
+   required uint32 		user_id=2;				// 4 byte
+   required uint32 	    device_type=3;			
+}
+//用户最近联系人
+message UserRecentContractoritem {
+  required uint32 		company_id = 1;			// 4 byte
+  required uint32 		user_id = 2;					// 4 byte
+  required uint32		friend_type = 3;			// 4 byte
+  required uint32		is_fixtop = 4;				// 1 byte
+  required uint32		fix_order = 5;				// 2 byte
+  required uint32		update_time = 6;			// 4 byte
+}
+//用户最近联系人列表
+message UserRecentChatList {
+  repeated UserRecentContractoritem friend_list = 1;     //max 500 item
+}
+//群组类型 
+enum GroupType{
+	GROUP_TYPE_NORMAL		= 0x01;
+	GROUP_TYPE_TMP			= 0x02;
+	GROUP_TYPE_ORG			= 0x03;	// + bob 组织架构群
+	GROUP_TYPE_PUBLIC		= 0x11; // + bob 2016.06.28 全体可见群
+}
+
+//群组列表项:
+message GroupListItem{
+  required uint32 company_id = 1;			//企业ID
+  required uint32 group_id = 2;
+  required GroupType group_type = 3;
+  required uint32 is_fixtop = 4;
+  required uint32 fix_order = 5;
+  required string remark = 7;	
+  required uint64 update_time = 8;			//服务器最新的更新时间戳
+  required bool is_delete   = 9;
+}
+//用户的群组列表: 
+message UserGroupList{
+  repeated GroupListItem group_list = 1;
+}
+//正式群组成员信息:
+message GroupMemberItem{
+  required uint32 company_id = 1;			//企业ID
+  required uint32 member_id = 2;
+  required string member_name = 3;	
+  required string member_remark = 4;	
+  required uint32 member_role = 5;  //群成员角色(0-群主，1-管理员，2-普通成员)
+  required uint32 update_time = 6;
+  required bool is_delete   = 7;
+}
+//正式群的成员列表: 
+message GroupMemberList{
+  repeated GroupMemberItem member_list = 1;
+}
+
+//组织架构群组成员信息:
+message OrgGroupMemberItem{
+  required uint32 company_id = 1;			//企业ID
+  required uint32 member_id = 2;
+  required uint32 update_time = 3;
+}
+//组织架构群的成员列表: 
+message OrgGroupMemberList{
+  repeated OrgGroupMemberItem member_list = 1;
+}
+
+message OrgNode{
+	required uint32 id =1; //(用户：用户id  部门：部门id)
+	required uint32 lvalue  =2;
+	required uint32 rvalue  =3;
+	required uint32 type    =4; //(0: 部门  1：用户)
+}
+message OrgTree{
+  repeated OrgNode org_node_list = 1;
+}
+
+//公司内所有用户列表
+message CompanyUserList{
+    repeated uint32 user_id = 1;
+}

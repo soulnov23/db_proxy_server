@@ -1,0 +1,337 @@
+//=============================================================================
+// 联系人相关协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+
+package IM.Buddy;
+
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id   0x0002
+
+//==========================================================
+// 最近联系人列表
+//==========================================================
+// 最近联系人列表请求
+message IMRecentContactReq{
+	//cmd id:		0x0201
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required uint64 update_time = 3;		//更新时间
+	optional bytes attach_data = 20;
+}
+
+// 最近联系人返回
+// 结果会分包,100项分一个包
+message IMRecentContactRsp{
+	//cmd id:		0x0202
+	required uint64 update_time = 1;		//服务器最新的更新时间戳
+	required uint32 is_more_data = 2;		//是否还有数据 0-没数据，1-有数据
+	repeated IM.BaseDefine.RecentContactInfo contact_info_list = 3;
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 更新最近联系人
+//==========================================================
+// 更新最近联系人请求
+// 将指定类型&ID的用户 设置为最新的会话联系人
+message IMUpdateRecentContactReq{
+	//cmd id:		0x0203
+	required uint32 company_id = 1;				
+	required uint32 user_id = 2;
+	required IM.BaseDefine.SessionType session_type = 3;	//单人、多人、群组
+	required uint32 contact_id = 4;				//UserID or GroupID 	
+	required uint32 contact_company_id = 5;	
+	required bool  isDelete = 6;				//更新操作类型（0-增加、1-删除）
+	optional bytes attach_data = 20;
+}
+
+// 更新最近联系人返回
+message IMUpdateRecentContactRsp{
+	//cmd id:		0x0204
+	required uint64 update_time = 1;			//服务器最新的更新时间戳
+	optional bytes attach_data = 20;
+}
+
+
+// 最近联系人操作
+// 群组ServerID: IM::BaseDefine::ServiceID::SID_GROUP
+// 群组CmdID: IM::BaseDefine::GroupCmdID::CID_GROUP_LISTITEM_SET_REQ
+// ----------------------------------------------------------------
+// 单人ServerID: IM::BaseDefine::ServiceID::SID_PERSONAL_SERVER
+// 单人CmdID: IM::BaseDefine::BuddyListCmdID::CID_BUDDY_LISTITEM_REQ
+message IMListItemSetReq{
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;
+	required uint32 dest_company_id = 3;	
+	required uint32 dest_user_id = 4;
+	required IM.BaseDefine.SessionType session_type = 5;	//单人、多人、群组
+	required IM.BaseDefine.ListItemOptType  type =6;
+}
+
+// 最近联系人操作返回
+// 群组ServerID: IM::BaseDefine::ServiceID::SID_GROUP
+// 群组CmdID: IM::BaseDefine::GroupCmdID::CID_GROUP_LISTITEM_SET_RES
+// ----------------------------------------------------------------
+// 单人ServerID: IM::BaseDefine::ServiceID::SID_PERSONAL_SERVER
+// 单人CmdID: IM::BaseDefine::BuddyListCmdID::CID_BUDDY_LISTITEM_RSP
+message IMListItemSetRsp{
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;//被操作对象
+	required IM.BaseDefine.OptResultCode result_code = 3;
+	required IM.BaseDefine.ListItemOptType  type =4;
+	required IM.BaseDefine.SessionType session_type = 5;
+	required uint32 fixtop_priority =6;    //置顶值，置顶操作有效
+	optional bytes attach_data = 20;
+}
+
+// 单人
+message IMGetFixTopListReq{
+	// cmd: CID_BUDDY_LISTFIXTOP_REQ
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	optional bytes attach_data = 20;
+}
+
+// 单人
+message IMGetFixTopListRsp{
+	// cmd: CID_BUDDY_LISTFIXTOP_RSP
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.RecentFixTop list_fix_top = 3;
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 常用联系人列表(SESSION_TYPE_SINGLE)，群组类型的由群组协议去处理
+//==========================================================
+// 常用(联系人、多人会话、群组）信息请求
+message IMFrequentContactReq{
+	//cmd id:	0x0205	
+	required uint32 company_id = 1;					
+	required uint32 user_id = 2;
+	required uint64 update_time = 3;  			//本地缓存的更新时间戳
+	optional bytes attach_data = 20;
+}
+
+// 常用(联系人、多人会话、群组）信息返回
+// 结果会分包,100项分一个包
+message IMFrequentContactRsp{
+	//cmd id: 	0x0206		
+	required uint64 update_time = 1;			//服务器最新的更新时间戳
+	required uint32 is_more_data = 2;		//是否还有数据 0-没数据，1-有数据
+	repeated IM.BaseDefine.FrequentContactInfo frequent_baseinfo_list = 3;  //信息列表
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 常用联系人用户信息（基本详细信息、状态信息）
+//==========================================================
+//请求指定人的详细信息
+message IMSingleUserInfoReq{
+	//cmd id:		0x0207
+	required uint32 company_id = 1;						
+	required uint32 user_id = 2;
+	repeated IM.BaseDefine.UserIdItem user_id_list = 3; 
+	optional bytes attach_data = 20;
+}
+
+message IMSingleUserInfoRsp{
+	//cmd id:		0x0208
+	repeated IM.BaseDefine.UserInfo user_info_list = 3;
+	optional bytes attach_data = 20;
+}
+
+//所有(更新)联系人详细信息请求
+message IMAllUserReq{		
+	//cmd id:		0x0209
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required uint64 update_time = 3;  			//本地缓存的更新时间戳
+	optional bytes attach_data = 20;
+}
+////所有(更新)联系人详细信息返回
+message IMAllUserRsp{
+	//cmd id:		0x020a
+	required uint64 update_time = 1;			//更新时间
+	required uint32 is_more_data = 2;		//是否还有数据 0-没数据，1-有数据
+	repeated IM.BaseDefine.UserInfo user_list = 3;		
+	optional bytes attach_data = 20;
+}
+
+
+//==========================================================
+// 信息变更操作
+//==========================================================
+
+// 通知（服务端专用，通知客户端请求对应通知类别的消息）
+message IMServerNotifyClient {
+	//cmd id 0x021e
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required IM.BaseDefine.ServerNotifyType	notify_type=3;
+}
+
+
+
+// 头像修改通知（广播）
+message IMAvatarChangedNotify {
+    //cmd id:		0x020e
+	required uint32 company_id = 1;					
+    required uint32 changed_user_id = 2;      // 谁修改了avatar
+    required string avatar_url = 3;           //
+	required uint64 update_time = 4;		  //更新时间
+}
+
+// 用户头像修改请求
+message IMChangeAvatarReq{
+	//cmd id:		0x020f
+	required uint32 company_id = 1;			
+	required uint32 user_id = 2;
+	required string avatar_url = 3;			//http上传生成url
+	required IM.BaseDefine.SessionType session_type = 4; 	// 
+	optional bytes attach_data = 20;
+}
+
+// 用户头像修改返回
+message IMChangeAvatarRsp{
+	//cmd id:		0x0210
+	required uint32 result_code = 1;
+	required uint64 update_time = 2;	
+	optional bytes attach_data = 20;
+}
+
+// 个性签名修改通知
+message IMSignInfoChangedNotify {
+    //cmd id:		0x0211
+	required uint32 company_id = 1;						
+    required uint32 changed_user_id = 2;     // 谁修改了个性签名
+    required string sign_info = 3;
+}
+
+// 个性签名修改请求
+message IMChangeSignInfoReq{
+   //cmd id:		0x0212
+	required uint32 company_id = 1;				
+    required uint32 user_id = 2;
+    required string sign_info = 3;
+    optional bytes attach_data = 20;
+}
+
+// 个性签名修改返回
+message IMChangeSignInfoRsp{
+    //cmd id:		0x0213
+    required uint32 result_code = 1;
+	required uint64 update_time = 2;				
+    optional bytes attach_data = 20;
+}
+
+// 用户其它信息修改请求
+message IMModifyUserInfoReq{ 
+	//cmd id:		0x0214
+	required uint32 from_user_id = 1;		
+	required uint32 from_company_id = 2;	
+	required IM.BaseDefine.UserInfo user_info = 3;	//需要修改的字段赋值
+}
+
+// 用户其它信息修改返回
+message IMModifyUserInfoRsp{
+	//cmd id:		0x0215
+	required IM.BaseDefine.OptResultCode	result = 1;
+	required uint64 update_time = 2;			
+}
+
+
+//==========================================================
+// 用户状态通知 
+//==========================================================
+//只给移动端通知
+message IMLoginStatusNotify{
+	//cmd id:		0x020e
+	required uint32 company_id = 1;					
+	required uint32 user_id = 2;
+	required uint32 device_type = 3;					//设备类型标识
+	required IM.BaseDefine.UserStatType login_stat = 4;
+}
+
+//==========================================================
+// 联系人相关操作 
+//==========================================================
+//2016-08-01 jiangcanjun
+//联系人操作请求
+message IMOptBuddyReq{
+	//cmd id:		0x0216				
+	required uint32 req_user_id = 1;				//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;				//消息接受方
+	required uint32 dest_company_id =4;
+	required uint64 create_time = 5; 
+	required IM.BaseDefine.BuddyOptType opt_type =6;	// add or del 
+	required string opt_remark = 7;
+}
+
+//联系人操作结果返回
+message IMOptBuddyRsp{
+	//cmd id:		0x0217						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;			//消息接受方
+	required uint32 dest_company_id =4;
+	required uint64 response_time = 5; 
+	required IM.BaseDefine.BuddyOptType opt_type = 7;	// add or del 
+	required IM.BaseDefine.OptResultCode result = 8;					//是否同意（1-同意，0-拒绝）
+	required string opt_remark = 9;
+}
+
+// 联系人昵称修改请求
+message IMModiNickNameReq{
+	//cmd id:		0x0218   					//备注好友姓名
+	required uint32 user_id = 1;				//消息发送方
+	required uint32 company_id = 2;	
+	required uint32 dest_user_id = 3;			//备注的好友id
+	required uint32 dest_company_id = 4;
+	required bytes 	nick_name = 20;
+}
+// 联系人昵称修改返回
+message IMModiNickNameRsp{
+	//cmd id:		0x0219  					//备注好友姓名
+	required uint32 user_id = 1;				//消息发送方
+	required uint32 company_id = 2;	
+	required uint32 dest_user_id = 3;			//备注的好友id
+	required uint32 dest_company_id = 4;
+	required bytes 	nick_name = 5;
+	required uint64	update_time = 6;
+}
+
+///////////////////////////////////////////////////////
+// 获取好友请求列表
+message IMGetBuddyReqListReq{
+	//cmd id:		0x021a
+	required uint32 user_id = 1;		
+	required uint32 company_id = 2;	
+	required uint64 update_time = 3;	//客户端存有的版本
+	required uint32 pack_index = 4;		//当前分包索引
+}
+
+message IMGetBuddyReqListRsp{
+	//cmd id:		0x021b
+	required uint64 update_time = 1;			//服务器最新的版本
+	repeated IM.BaseDefine.IMBuddyReqInfo BuddysReqs = 2;
+	required uint32 pack_index = 3;				//当前分包索引
+	required uint32 pack_count = 4;				//分包总数
+}

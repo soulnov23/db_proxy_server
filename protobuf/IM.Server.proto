@@ -1,0 +1,353 @@
+//=============================================================================
+// 服务器交互协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+
+package IM.Server;
+import "IM.BaseDefine.proto";
+option optimize_for = LITE_RUNTIME;
+//add by jiangcanjun 20160919
+message RecentContactItem{
+	required uint32 company_id = 1;
+	required uint32 user_id = 2;
+	required uint64 update_time = 3;
+}
+
+//service id:   0x0007
+
+//db_proxy
+message IMStopReceivePacket{
+	//cmd id:   0x0702
+	required uint32 result = 1;
+}
+
+//db_proxy
+message IMValidateReq{
+	//cmd id:	0x0703
+	required string user_name = 1;
+	required string password = 2;
+	optional bytes attach_data = 20;
+}
+
+//db_proxy
+message IMValidateRsp{
+	//cmd id:	0x0704
+	required string user_name = 1;
+	required uint32 result_code = 2;
+	optional string result_string = 3;
+	optional IM.BaseDefine.UserInfo user_info = 4;
+	optional bytes attach_data = 20;
+}
+
+//db_proxy
+message IMGetDeviceTokenReq{
+	//cmd id:	0x0705
+	repeated uint32 user_id = 1;
+	optional bytes attach_data = 20;
+}
+
+//db_proxy
+message IMGetDeviceTokenRsp{
+	//cmd id:	0x0706
+	repeated IM.BaseDefine.UserTokenInfo user_token_info = 1;
+	optional bytes attach_data = 20;
+}
+
+message IMRoleSet{
+	//cmd id:	0x0707
+	required uint32 master = 1;		//0-slave, 1-master
+}
+
+message IMOnlineUserInfo{
+	//cmd id:	0x0708
+	repeated IM.BaseDefine.ServerUserStat user_stat_list = 1;
+}
+
+message IMMsgServInfo{
+	//cmd id:	0x0709
+	required string ip1 = 1;
+	required string ip2 = 2;
+	required uint32 port = 3;
+	required uint32 max_conn_cnt = 4;
+	required uint32 cur_conn_cnt = 5;
+	required string host_name = 6;
+}
+
+message IMUserStatusUpdate{
+	//cmd id:	0x070a
+	required uint32 user_status = 1;
+	required uint32 user_id = 2;
+	required IM.BaseDefine.ClientType client_type = 3;
+}
+
+message IMUserCntUpdate{
+	//cmd id:	0x070b
+	required uint32 user_action = 1; 		//1-inc, 2-dec
+	required uint32 user_id = 2;
+}
+
+message IMServerKickUser{
+	//cmd id:	0x070d
+	required uint32 user_id = 1;
+	required IM.BaseDefine.ClientType client_type = 2;
+	required uint32 reason = 3;   	//KICK_REASON_DUPLICATE_USER = 1;
+}
+
+message IMServerPCLoginStatusNotify{
+	//cmd id:	0x070e
+	required uint32 user_id = 1;
+	required uint32 login_status = 2; 		//1: on   0: off
+}
+
+message IMPushToUserReq{
+	//cmd id:	0x070f
+	required string flash = 1;
+	required string data = 2;
+	repeated IM.BaseDefine.UserTokenInfo user_token_list = 3;
+}
+
+message IMPushToUserRsp{
+	//cmd id:	0x0710
+	repeated IM.BaseDefine.PushResult push_result_list = 1;
+}
+
+message IMGroupGetShieldReq{
+	//cmd id:			0x0711
+	required uint32 group_id = 1;
+	repeated uint32 user_id = 2;
+	optional bytes attach_data = 20;
+}
+
+message IMGroupGetShieldRsp{
+	//cmd id: 			0x0712
+	required uint32 group_id = 1;
+	repeated IM.BaseDefine.ShieldStatus shield_status_list = 2;
+	optional bytes attach_data = 20;
+}
+
+message IMFileTransferReq{
+	//cmd id:			0x0715
+	required uint32 from_user_id = 1;
+	required uint32 to_user_id = 2;
+	required string file_name = 3;
+	required uint32 file_size = 4;
+	required IM.BaseDefine.TransferFileType trans_mode = 5;
+	optional bytes attach_data = 20;
+}
+
+message IMFileTransferRsp{
+	//cmd id:			0x0716
+	required uint32 result_code = 1;
+	required uint32 from_user_id = 2;
+	required uint32 to_user_id = 3;
+	optional string file_name = 4;
+	optional uint32 file_size = 5;
+	optional string task_id = 6;
+	optional IM.BaseDefine.TransferFileType trans_mode = 7;
+	optional bytes attach_data = 20;
+}
+
+message IMFileServerIPReq{
+	//cmd id:			0x0717
+
+}
+
+message IMFileServerIPRsp{
+	//cmd id:			0x0718
+	repeated IM.BaseDefine.IpAddr ip_addr_list = 1;
+}
+//消息服务器与db通信协议 （注 消息入库这是复用了 IM.Message.proto的IMMsg消息结构）
+//从数据库中取出企业开关  客户开关 by 蒋灿军  2016.8.16/////////////////////////////////////////////////////
+
+message IMGetBuddyConfigReq{
+	//cmd id:		0x0719         
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+}
+message IMGetBuddyConfigRsp{
+	//cmd id:		0x071a       
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required bytes company_config = 5;
+	required bytes user_config = 6;
+}
+//访问数据库验证用户名密码  add by jcj 20160827
+message IMLoginToSqlReq{
+	//cmd id:		0x071b
+	//登录验证
+	required uint32 company_id = 1;	//
+	required string user_name = 2;
+	required string password = 3;
+	required IM.BaseDefine.ClientType client_type = 4;
+	required IM.BaseDefine.UserStatType online_status = 5;
+	optional IM.BaseDefine.LoginResultCode result_code = 6;
+	optional IM.BaseDefine.UserInfo user_info = 7;
+	optional uint64 pc_last_offline_time = 8;		//PC端上次离线时间
+	optional uint64 phone_last_offline_time = 9;	//移动端端上次离线时间
+	optional string client_ver = 10;			//客户端版本号 bob 2017.03.15
+}
+message IMLoginToSqlRsp{
+	//cmd id:		0x071c
+	//验证结果
+	required uint32 company_id = 1;	
+	required string user_name = 2;
+	required string password = 3;
+	required IM.BaseDefine.ClientType client_type = 4;
+	required IM.BaseDefine.UserStatType online_status = 5;
+	optional IM.BaseDefine.LoginResultCode result_code = 6;
+	optional IM.BaseDefine.UserInfo user_info = 7;
+	optional uint64 pc_last_offline_time = 8;		//PC端上次离线时间
+	optional uint64 phone_last_offline_time = 9;	//移动端端上次离线时间
+}
+message IMUsrStatBroadcoast{
+	//cmd id 0x071d 	用户状态广播
+	required uint32 company_id = 1;
+	required uint32 user_id = 2;
+	required uint32 connsvr_id = 3;
+	required uint32 connsocket_index = 4;
+	required IM.BaseDefine.ClientType client_type = 5;
+	required IM.BaseDefine.UserStatType client_stat = 6;
+	required uint64 update_time = 7;
+}
+//好友操作入库
+message IMOptBuddyStorageReq{
+	//cmd id:		0x071e			
+	required uint32 req_user_id = 1;				//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;				//消息接受方
+	required uint32 dest_company_id =4;
+	required uint64 create_time = 5; 
+	required string opt_remark = 7;
+	required bool 	req_stat  = 8;  //	online :1
+};
+//好友操作入库返回
+message IMOptBuddyStorageRsp{
+	//cmd id:		0x071f			
+	required uint32 req_user_id = 1;				//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;				//消息接受方
+	required uint32 dest_company_id =4;
+	required uint64 create_time = 5; 
+	required string opt_remark = 7;	
+	required bool 	req_stat  = 8;  //	online :1
+};
+//常用联系人 入库 dest 入 req
+message IMBuddyStorageReq{
+	//cmd id:		0x0721						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;			//消息接受方
+	required uint32 dest_company_id =4;
+	required IM.BaseDefine.BuddyOptType opt_type =5;
+	required uint64 update_time = 6;
+	required IM.BaseDefine.OptResultCode result = 7;					//是否成功（1-成功，0-失败）
+}
+//常用联系人 dest 入 req
+message IMBuddyStorageRsp{
+	//cmd id:		0x0722						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;			//消息接受方
+	required uint32 dest_company_id =4;
+	required IM.BaseDefine.BuddyOptType opt_type =5;
+	required uint64 update_time = 6;
+	required IM.BaseDefine.OptResultCode result = 7;					//是否成功（1-成功，0-失败）
+}
+//最近联系人入库
+message IMRecentContactStorageReq{
+	//cmd id:		0x0723						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	repeated RecentContactItem recent_contact = 3;
+}
+//最近联系人
+message IMRecentContactStorageRsp{
+	//cmd id:		0x0724						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	repeated RecentContactItem recent_contact = 3;
+}
+//加好友申请信息
+message IMBuddyReqInfoStorage{
+	//cmd id:		0x0725			
+	required uint32 user_id = 1;				//发出申请的id      
+	required uint32 company_id =2;
+	required uint32 dest_user_id = 3;				//被申请的id    
+	required uint32 dest_company_id =4;
+	required uint32 req_stat = 5;		//请求状态（1:请求中，2:同意，3:拒绝）
+	required uint64 req_time = 6;
+	required string remark = 7;
+}
+//删除最近联系人/群
+message IMDelRecentContactReq{
+	//cmd id:		0x0726						
+	required uint32 req_user_id = 1;			//消息发送方
+	required uint32 req_company_id = 2;
+	required uint32 dest_user_id = 3;		//被删除方
+	required uint32 dest_company_id =4;
+	required IM.BaseDefine.BuddyOptType opt_type =5;//人或者群两个标识
+}
+//修改密码协议
+message IMAlterPswdReq{
+	    //cmd id:			0x0727
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+	required string new_pswd = 3;
+	required string old_pswd = 4;	
+}
+message IMAlterPswdRsp{
+	    //cmd id:			0x0728
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+    required IM.BaseDefine.OptResultCode result_code = 3; //  1:ok  other: false		    
+}
+message IMReportOnlineInfo{
+	    //cmd id:			0x0729
+	required uint32 company_id = 1;					
+	required uint32 node_id = 2;	//登录服务器id					
+    required uint32 online_count = 3;//当前在线
+	required uint32 online_peek = 4;//今天到此在线峰值
+	required uint64 update_time = 5;
+}
+message IMReportChatInfo{
+	    //cmd id:			0x072a
+	required uint32 company_id = 1;	
+	required IM.BaseDefine.SessionType session_type = 2;	//会话类型
+	required uint32 node_id = 3;	//消息服务器id					
+	required uint64 online_count = 4;//当前时间段报告在线消息数量
+	required uint64 offline_count = 5;//当前时间段报告离线消息数量
+	required uint64 update_time = 6;//当前时间
+}
+//  获取角色、权限获取
+message IMGetUserRoleReq{
+    //cmd id:		0x072b CID_OTHER_GET_USER_ROLE_REQ
+	required uint32 company_id = 1;						
+    required uint32 user_id = 2;
+}
+//  获取角色、权限返回
+message IMUserRoleAuthorityRsp{
+    //cmd id:		0x072c CID_OTHER_GET_USER_ROLE_RSP
+    repeated IM.BaseDefine.IMUserRole role = 1;
+}
+
+
+//认证
+
+message IMAuthenticationReq{
+	required  IM.BaseDefine.ServiceID   type  =1 ;  //服务器类型
+	required  uint32                    node_id = 2;
+}
+
+message IMAuthenticationRsp{
+	required  IM.BaseDefine.ServiceID   type = 1;  //服务器类型
+	required  uint32                    node_id = 2;
+	required  uint32                    result = 3;   // 0(fail),1(success)
+	optional  bytes                     attach_data = 20;                
+}

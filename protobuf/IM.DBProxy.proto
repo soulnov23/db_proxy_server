@@ -1,0 +1,179 @@
+//=============================================================================
+// 联系人相关协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+
+package IM.DBProxy;
+
+//import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+//service id   0x0062
+
+//操作结果
+enum DBUpdateInfoResultDef
+{
+    DB_UPDATE_DATA_SUCCESS      = 0x0001;   //操作成功
+	DB_UPDATE_DATA_NO_DATA      = 0x0002;   //无数据
+	DB_UPDATE_DATA_FAIL         = 0x0003;   //更新失败
+}
+
+//公司信息更新
+message IMDBCompanyInfoReq{
+	//cmd id:		0x0901
+	required uint32 company_id = 1;			//企业ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBCompanyInfoRsp{
+	//cmd id:		0x0902
+	required uint32 company_id = 1;			//企业ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+
+//用户信息更新
+message IMDBUserInfoReq{
+	//cmd id:		0x0903
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBUserInfoRsp{
+	//cmd id:		0x0904
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+
+
+//用户好友列表更新
+message IMDBUserFriendListReq{
+	//cmd id:		0x0905
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBUserFriendListRsp{
+	//cmd id:		0x0906
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+//用户好友更新时间
+message IMDBUserFriendVerReq{
+	//cmd id:		0x0907
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBUserFriendVerRsp{
+	//cmd id:		0x0908
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+
+//用户群组列表
+message IMDBUserGroupListReq{
+	//cmd id:		0x0909
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBUserGroupListRsp{
+	//cmd id:		0x090a
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;			//用户ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+
+//群成员列表
+message IMDBGroupMemberReq{
+	//cmd id:		0x090b
+	required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;			//群ID
+	required uint32 opt_id = 19;			//自定义操作子命令（1正式群 2组织架构）
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBGroupMemberRsp{
+	//cmd id:		0x090c
+	required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;			//群ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+
+//群成员列表
+message IMDBOrgTreeReq{
+	//cmd id:		0x0911
+	required uint32 company_id = 1;			//企业ID
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+message IMDBOrgTreeRsp{
+	//cmd id:		0x0912
+	required uint32   company_id = 1;
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+//公司所有员工列表
+message IMDBCompanyUserListReq{
+	//cmd id:		0x090d
+	required uint32 company_id = 1;			//企业ID
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBCompanyUserListRsp{
+	//cmd id:		0x090e
+	required uint32 company_id = 1;			//企业ID
+	required DBUpdateInfoResultDef  update_ret = 18;         //更新结果
+	required uint32 opt_id = 19;			//自定义操作子命令
+	repeated bytes  attach_data = 20;		//节点回传数据
+}
+
+message IMDBCompanyOrgUpdateReq{
+	//cmd id:		S_CID_DB_ORG_UPDATE_REQ
+	required uint32 company_id = 1;			//企业ID
+	required uint32 user_opt_type = 2;	//用户信息操作类型 0-无用户数据操作,1-添加,2-删除,3-信息变更
+	repeated uint32 user_list = 3;//变动的用户列表
+}
+
+
+

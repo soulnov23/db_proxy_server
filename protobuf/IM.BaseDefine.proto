@@ -1,0 +1,763 @@
+//=============================================================================
+// 公共数据结构及常量定义
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+
+syntax = "proto2";
+
+package IM.BaseDefine;
+
+
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "DTL_IMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+// service id
+// 消息大类定义
+// 用于初次解析时,根据类型分派到不同的业务服务器
+// 用户通讯包(PB二进制包裹层)中的协议类型标识
+
+enum ServiceID{
+    SID_LOGIN           = 0x0001;           // 登录命令
+    SID_PERSONAL_SERVER = 0x0002;           // 单点服务命令（联系人信息、回话消息）
+    SID_GROUP           = 0x0003;           // 群组消息
+    SID_FILE            = 0x0004;			// 文件传输
+    SID_SWITCH_SERVICE  = 0x0005;			// 服务器切换 ?
+    SID_OTHER           = 0x0006;			// 其他类型 
+    SID_INTERNAL        = 0x0007;		    // 内部类型
+ 	
+	SID_STATUS			= 0x0020; 			// +状态消息 bob 2016.05.26
+	SID_ORG				= 0x0021;			// +组织架构 bob 2016.05.26
+	SID_ROUTER			= 0x0022;			// +ROUTER 服务器消息的消息 bob 2016.05.26
+	SID_USER_STATE      = 0x0023;           // +用户状态消息
+    SID_S2S_BROADCAST   = 0x0024;           // 服务器间广播推送服务
+	SID_EXT_MSG      	= 0x0041;			// +扩展的单点类消息 bob 2016.05.26
+	SID_EXT_GROUP      	= 0x0042;			// +扩展的群组类消息 bob 2016.05.26
+
+	SID_CONN        = 0x0060;            //连接服务器业务
+	SID_DISPATCH    = 0x0061;            //分发服务器业务
+	SID_DB_PROXY    = 0x0062;            //DB服务器业务
+	SID_CLIENT_HTTP = 0x0063;            //用来响应客户端请求连接节点的http服务节点
+	SID_FILE_SSL    = 0x0064;			// 文件传输ssl
+	SID_CONN_SSL    = 0x0065;            //连接服务器SSL业务(对外)
+	SID_MSGPUSH_SERVER	= 0x0066;
+}
+
+
+//=============================================================================
+// 子命令定义
+//
+//=============================================================================
+
+// command id for login
+// 账号登录类消息
+enum LoginCmdID{
+    CID_LOGIN_REQ_CONNECTIONSERVER  = 0x0101; 	//  查询 连接服务器  预留的命令,目前通过http方式实现  bob 2016.05.26
+    CID_LOGIN_RES_CONNECTIONSERVER  = 0x0102;	//  返回 连接服务器  预留的命令,目前通过http方式实现  bob 2016.05.26
+	
+    CID_LOGIN_REQ_USERLOGIN         = 0x0103;	//	请求登录
+    CID_LOGIN_RES_USERLOGIN         = 0x0104;	//	返回登录结果
+    CID_LOGIN_REQ_LOGINOUT          = 0x0105;	//	请求注销
+    CID_LOGIN_RES_LOGINOUT          = 0x0106; 	//	返回注销结果
+    CID_LOGIN_KICK_USER				= 0x0107; 	//	踢掉同名其他账号(自动踢)
+    CID_LOGIN_REQ_KICK_OTHERCLIENT  = 0x0108;	//  请求 踢掉PC端账号(手动踢)
+    CID_LOGIN_RES_KICK_OTHERCLIENT  = 0x0109;	//	返回 踢掉PC端账号结果
+
+    CID_LOGIN_REQ_DEVICETOKEN       = 0x010a;  	//	获取设备令牌
+    CID_LOGIN_RES_DEVICETOKEN       = 0x010b;  	//	返回设备令牌
+    CID_LOGIN_REQ_PUSH_SHIELD       = 0x010c;	//	请求勿扰
+    CID_LOGIN_RES_PUSH_SHIELD       = 0x010d; 	//
+    CID_LOGIN_REQ_QUERY_PUSH_SHIELD = 0x010e; 	//	查询 勿扰设置 ?
+    CID_LOGIN_RES_QUERY_PUSH_SHIELD = 0x010f;
+	CID_LOGIN_SOCKET_DROP_NOTIFY_REQ= 0x0110;	//  用户链接断开
+	CID_LOGIN_SOCKET_DROP_NOTIFY_RSP= 0x0111;	//	用户掉线返回
+	CID_LOGIN_MODIFY_PSWD_REQ		= 0x0112;
+	CID_LOGIN_MODIFY_PSWD_RSP		= 0x0113;
+	CID_LOGIN_MODIFY_USER_STAT_REQ  = 0x0114;   //  服务器发起用户状态更新请求,为避免脏数据,状态缓存只能由login节点修改
+	CID_LOGIN_ROLE_AUTHORITY_REQ    = 0x0115;   //  用户获取自己的权限角色及权限范围
+	CID_LOGIN_ROLE_AUTHORITY_RSP    = 0x0116;   //  用户获取自己的权限角色及权限范围返回
+}
+
+// 联系人子命令
+enum BuddyListCmdID{
+    CID_BUDDY_LIST_RECENT_CONTACT_LIST_REQUEST       = 0x0201;	//最近联系人列表
+    CID_BUDDY_LIST_RECENT_CONTACT_LIST_RESPONSE      = 0x0202;
+	CID_BUDDY_LIST_RECENT_CONTACT_UPDATE_REQUEST     = 0x0203;	//更新最近联系人
+    CID_BUDDY_LIST_RECENT_CONTACT_UPDATE_RESPONSE    = 0x0204;
+    CID_BUDDY_LIST_FREQUENT_CONTACT_LIST_REQUEST     = 0x0205;	//常用联系人列表
+    CID_BUDDY_LIST_FREQUENT_CONTACT_LIST_RESPONSE    = 0x0206;	
+	CID_BUDDY_LIST_SINGLE_USER_INFO_REQUEST          = 0x0207; 	//单个用户详细信息
+    CID_BUDDY_LIST_USER_INFO_RESPONSE                = 0x0208;
+	CID_BUDDY_LIST_ALL_USER_REQUEST                  = 0x0209;	//所有用户详细信息
+    CID_BUDDY_LIST_ALL_USER_RESPONSE                 = 0x020a;
+
+	CID_BUDDY_LIST_AVATAR_CHANGED_NOTIFY             = 0x020e;  //头像更改通知
+    CID_BUDDY_LIST_CHANGE_AVATAR_REQUEST             = 0x020f;	//头像修改
+    CID_BUDDY_LIST_CHANGE_AVATAR_RESPONSE            = 0x0210;
+    CID_BUDDY_LIST_SIGN_INFO_CHANGED_NOTIFY          = 0x0211; //签名修改通知
+	CID_BUDDY_LIST_CHANGE_SIGN_INFO_REQUEST          = 0x0212; //修改个性签名
+    CID_BUDDY_LIST_CHANGE_SIGN_INFO_RESPONSE         = 0x0213; 
+	CID_BUDDY_LIST_MODIFY_USER_INFO_REQUEST          = 0x0214; //修改个人信息
+	CID_BUDDY_LIST_MODIFY_USER_INFO_RESPONSE         = 0x0215; 
+	CID_BUDDY_LIST_OPT_REQUEST						 = 0x0216; //好友操作（add or delete）
+	CID_BUDDY_LIST_OPT_RESPONSE						 = 0x0217; 
+	CID_BUDDY_LIST_MODIFY_NICKNAME_REQUEST			 = 0x0218; //修改好友备注
+	CID_BUDDY_LIST_REMARK_RESPONSE					 = 0x0219; 
+	CID_BUDDY_LIST_REQUEST_LIST_REQUEST				 = 0x021a; //获取好友请求列表
+	CID_BUDDY_LIST_REQUEST_LIST_RESPONSE			 = 0x021b; 
+
+	CID_BUDDY_LIST_USER_STATUS_NOTIFY                = 0x021d; 	// - 不适用,统一通过STATUS service来处理  bob 2016.06.28
+	CID_BUDDY_LIST_SERVER_TYPE_NOTIFY                = 0x021e; 	//通知（服务端专用，通知客户端请求对应通知类别的消息）
+	
+	CID_BUDDY_LISTITEM_REQ                         = 0X0220;  //置顶请求
+	CID_BUDDY_LISTITEM_RSP                         = 0X0221;
+	
+	CID_BUDDY_LISTFIXTOP_REQ                         = 0X0222;  //置顶列表请求
+	CID_BUDDY_LISTFIXTOP_RSP                         = 0X0223;	//置顶列表请求返回
+}
+
+// 对话消息子命令
+enum MessageCmdID{
+    CID_MSG_DATA					= 0x0301;	// 消息数据
+    CID_MSG_DATA_ACK				= 0x0302; 	// 消息接收确认
+    CID_MSG_DATA_OPT_NOTIFY     	= 0x0303;   // 消息属性操作通知
+    CID_MSG_RECEIPT_COUNT_REQ 		= 0x0304;	// 获取消息回执个数	
+    CID_MSG_RECEIPT_COUNT_RSP   	= 0x0305; 	//
+	CID_MSG_RECEIPT_LIST_REQ		= 0x0306;	// 获取回执列表
+	CID_MSG_RECEIPT_LIST_RSP		= 0x0307;
+	CID_MSG_SERVER_TIME_REQ			= 0x0308;	// 同步服务端时间
+	CID_MSG_SERVER_TIME_RSP			= 0x0309;
+    CID_MSG_OFFLINE_COUNT_REQ		= 0x030a; 	// 个人离线消息个数
+    CID_MSG_OFFLINE_COUNT_RSP		= 0x030b;	//
+	CID_GMSG_OFFLINE_COUNT_REQ		= 0x0319; 	// 群组离线消息个数
+    CID_GMSG_OFFLINE_COUNT_RSP		= 0x031a;	//
+	CID_MSG_DATA_LIST_REQ			= 0x030c;	// 消息列表详情请求
+	CID_MSG_DATA_LIST_RSP			= 0x030d;
+	CID_MSG_OFFLINE_LIST_REQ			= 0x030e;	// 离线消息列表详情请求
+	CID_MSG_OFFLINE_LIST_RSP			= 0x030f;
+    CID_MSG_GET_LATEST_MSG_ID_REQ   = 0x0310;
+    CID_MSG_GET_LATEST_MSG_ID_RSP   = 0x0311;
+    CID_MSG_GET_BY_MSG_ID_REQ       = 0x0312;	// 根据消息ID获取消息内容
+    CID_MSG_GET_BY_MSG_ID_RES       = 0x0313;
+	
+	CID_MSG_TYPING					= 0x0314;	// 对方正在输入 bob
+	CID_MSG_TYPED					= 0x0315;	// 对方完成输入	bob
+	CID_MSG_DATA_OFFLINE			= 0x0316;   //离线消息入库
+	CID_MSG_DATA_ONLINE				= 0x0317;	//在线消息入库
+	CID_MSG_P2P						= 0x0318;	 //p2p消息命令(正在输入、抖屏...)	
+	CID_MSG_DATA_DEL				= 0x031b;
+}
+
+// command id for group message
+enum GroupCmdID{
+    CID_GROUP_LIST_REQ				= 0x0401;	//群列表
+    CID_GROUP_LIST_RSP				= 0x0402;
+    CID_GROUP_INFO_REQ          	= 0x0403;	//群详细信息
+    CID_GROUP_INFO_RSP				= 0x0404;
+	CID_GROUP_MEMBER_REQ			= 0x0405;	//群成员
+	CID_GROUP_MEMBER_RSP			= 0x0406;
+    CID_GROUP_CREATE_REQ            = 0x0407;	//创建群
+    CID_GROUP_CREATE_RSP            = 0x0408;
+	CID_GROUP_DISSOLVE_REQ			= 0x0409;	//解散群
+	CID_GROUP_DISSOLVE_RSP			= 0x040a;
+	CID_GROUP_OPT_NOTIFY			= 0x040b;	//群操作通知
+    CID_GROUP_CHANGE_MEMBER_REQ 	= 0x040c;	//群成员变更	
+    CID_GROUP_CHANGE_MEMBER_RSP 	= 0x040d;
+    CID_GROUP_CHANGE_MEMBER_NOTIFY  = 0x040e;	//群成员变更通知
+	CID_GROUP_MSG_ID_REQ            = 0x0411;   //群消息id获取
+	CID_GROUP_MSG_ID_RSP            = 0X0412;
+	CID_GROUP_INFO_MODIFY_REQ  		= 0X0413; //群信息修改
+	CID_GROUP_INFO_MODIFY_RSP  		= 0X0414;
+	CID_GROUP_INFO_MODIFY_NOTIFY  	= 0X0415;	//群信息修改通知 
+	CID_GROUP_MSG_NOTIFY            = 0X0416;
+	
+	CID_GROUP_LISTITEM_SET_REQ             = 0X0417;  //群属性设置
+	CID_GROUP_LISTITEM_SET_RSP             = 0X0418;
+	CID_GROUP_OWNER_SET_REQ                = 0X0419;  //群权限设置
+	CID_GROUP_OWNER_SET_RSP                = 0X041a;
+	CID_GROUP_OWNER_SET_NOTIFY             = 0X041b;
+	CID_GROUP_DISTURB_OPT_REQ                = 0X041c;  //群免打扰设置
+	CID_GROUP_DISTURB_OPT_RSP                = 0X041d;
+	
+	CID_USER_STATE_GROUP_SUBS_REQ   =0x0420;     //群/组织架构(含子节点）订阅
+	CID_USER_STATE_GROUP_UNSUBS_REQ =0x0421;    
+	CID_USER_STATE_ORGNODE_SUBS_REQ =0x0422;     //节点订阅（不含子节点)
+	CID_USER_STATE_ORGNODE_UNSUBS_REQ  =0x04123;
+	CID_USER_STATE_CHANGED_NOTIFY     =0x04124;   //变更用户通知
+	CID_USER_STATE_ORGTREE_SUBS_REQ   =0x04125;    //org树在线用户数
+	CID_USER_STATE_ORGTREE_UNSUBS_REQ =0x04126;
+	CID_USER_STATE_ORGTREE_NOTIFY     =0x04127;
+	
+
+}
+
+enum FileCmdID{
+    CID_FILE_LOGIN_REQ              = 0x0501; // sender/receiver need to login to
+    CID_FILE_LOGIN_RES              = 0x0502; // login success or failure
+    CID_FILE_STATE                  = 0x0503;
+    CID_FILE_PULL_DATA_REQ          = 0x0504;
+    CID_FILE_PULL_DATA_RSP          = 0x0505;
+    // To MsgServer
+    CID_FILE_REQUEST                = 0x0506; // sender -> receiver
+    CID_FILE_RESPONSE               = 0x0507; // receiver -> sender
+    CID_FILE_NOTIFY                 = 0x0508;
+    CID_FILE_HAS_OFFLINE_REQ        = 0x0509;
+    CID_FILE_HAS_OFFLINE_RES        = 0x050a;
+    CID_FILE_ADD_OFFLINE_REQ        = 0x050b;
+    CID_FILE_DEL_OFFLINE_REQ        = 0x050c;
+}
+
+enum RouterCmdID{
+	CID_ROUTER_CLIENT_REGISTER_REQ          = 0x2201;
+	CID_ROUTER_CLIENT_REGISTER_RSP          = 0x2202;
+	CID_ROUTER_CLIENT_GET_SERVICES_REQ      = 0x2203;
+	CID_ROUTER_CLIENT_GET_SERVICES_RSP      = 0x2204;
+	CID_ROUTER_UPDATE_CLIENT_REQ            = 0x2205;
+	CID_ROUTER_UPDATE_CLIENT_RSP            = 0x2206;
+	CID_ROUTER_PUSH_SERVER_STATUS           = 0x2207;
+	CID_ROUTER_CLIENT_BROADCAST_REQ         = 0x2208;
+	CID_ROUTER_CLIENT_BROADCAST_RSP         = 0x2209;
+	CID_ROUTER_PUSH_BROADCAST_MESSAGE       = 0x220a;
+	CID_ROUTER_CONN_SRV_STAT_REPORT_REQ     = 0x220b;
+	CID_ROUTER_CONN_SRV_LIST_STAT_REQ       = 0x220c;
+	CID_ROUTER_CONN_SRV_LIST_STAT_PUSH      = 0x220d;
+	CID_ROUTER_NODE_STOP_PUSH               = 0x220e;
+    CID_ROUTER_LOCALCACHE_REFRESH_NOTIFY    = 0x220f;
+	
+	
+}
+
+// command id for switch service
+enum SwitchServiceCmdID{
+    CID_SWITCH_P2P_CMD	= 0x0601;	//
+}
+
+enum OtherCmdID{
+    CID_OTHER_HEARTBEAT                     = 0x0701;
+    CID_OTHER_STOP_RECV_PACKET              = 0x0702;
+    CID_OTHER_VALIDATE_REQ                  = 0x0703;
+    CID_OTHER_VALIDATE_RSP                  = 0x0704;
+    CID_OTHER_GET_DEVICE_TOKEN_REQ          = 0x0705;
+    CID_OTHER_GET_DEVICE_TOKEN_RSP          = 0x0706;
+    CID_OTHER_ROLE_SET                      = 0x0707;
+    CID_OTHER_ONLINE_USER_INFO              = 0x0708;
+    CID_OTHER_MSG_SERV_INFO                 = 0x0709;
+    CID_OTHER_USER_STATUS_UPDATE            = 0x070a;
+    CID_OTHER_USER_CNT_UPDATE               = 0x070b;
+    CID_OTHER_SERVER_KICK_USER              = 0x070d;
+    CID_OTHER_LOGIN_STATUS_NOTIFY           = 0x070e;
+    CID_OTHER_PUSH_TO_USER_REQ              = 0x070f;
+    CID_OTHER_PUSH_TO_USER_RSP              = 0x0710;
+    CID_OTHER_GET_SHIELD_REQ                = 0x0711;
+    CID_OTHER_GET_SHIELD_RSP                = 0x0712;
+    CID_OTHER_FILE_TRANSFER_REQ             = 0x0731;
+    CID_OTHER_FILE_TRANSFER_RSP             = 0x0732;
+    CID_OTHER_FILE_SERVER_IP_REQ            = 0x0733;
+    CID_OTHER_FILE_SERVER_IP_RSP            = 0x0734;
+	CID_OTHER_GET_BUDDY_CONGFIG_REQUEST     = 0x0719; 	//请求数据库中 企业 及 用户的 配置
+	CID_OTHER_GET_BUDDY_CONGFIG_RESPONSE    = 0x071a; 	//
+	CID_OTHER_REQ_TO_MYSQL_REQ				= 0x071b;
+	CID_OTHER_REQ_TO_MYSQL_RSP				= 0x071c;
+	CID_OTHER_USER_STAT_BROADCAST  			= 0x071d; 	//用户登录成功 广播包
+	CID_OTHER_BUDDY_OPT_STORA_REQ			= 0x071e;	//好友请求入库
+	CID_OTHER_BUDDY_OPT_STORA_RSP			= 0x071f;	//好友请求入库返回
+	CID_OTHER_BUDDY_STORAGE_REQ				= 0x0721;	//好友入库请求
+	CID_OTHER_BUDDY_STORAGE_RSP				= 0x0722;	//好友入库返回
+	CID_OTHER_RECENT_CONTACT_STORAGE_REQ    = 0x0723;
+	CID_OTHER_RECENT_CONTACT_STORAGE_RSP    = 0x0724;
+	CID_OTHER_BUDDY_REQINFO_STORAGE			= 0x0725;
+	CID_OTHER_DEL_RECENT_CONTCAT			= 0x0726;
+	CID_OTHER_ALTER_PSWD_REQ 				= 0x0727;
+	CID_OTHER_ALTER_PSWD_RSP 				= 0x0728;
+	CID_OTHER_REPORT_ONLINE_INFO            = 0x0729;//报告登录数量
+	CID_OTHER_REPORT_MSG_INFO               = 0x072a;//报告登录数量
+	CID_OTHER_GET_USER_ROLE_REQ             = 0x072b;
+	CID_OTHER_GET_USER_ROLE_RSP             = 0x072c;
+	
+	CID_OTHER_AUTHENTICATION_REQ            =0x072d;
+	CID_OTHER_AUTHENTICATION_RSP            =0x072e;
+}
+
+enum UserStateCmdID{
+	S_CID_USER_STATE_UPDATE_REQ             = 0x0801;   //服务器间向状态服务节点发起用户状态信息更新通知(S2S)
+	S_CID_USER_STAT_PUSH_REQ                = 0x0802;   //状态服务节点向其它服务节点发起用户状态信息更新通知(S2S)
+	CID_USER_STATE_SERVER_PULL_STATUS		= 0x0803;	//服务端推送的用户状态
+	CID_USER_STATE_REQ                      = 0x0804;	//联系人状态 
+    CID_USER_STATE_RSP                      = 0x0805;   //联系人状态返回
+	CID_USER_STATE_UPDATE_REQ               = 0x0806;   //客户端发出的状态变更请求，主要用于离开状态通知
+	
+	CID_USER_STATE_START_REQ				= 0x0810;	//开始接收状态  bob 2016.12.15
+	CID_USER_STATE_TMPUSER_SUBS_REQ			= 0x0811;	//增加用户临时状态订阅  bob 2016.12.15
+	CID_USER_STATE_TMPUSER_UNSUBS_REQ		= 0x0812;	//取消用户临时状态订阅  bob 2016.12.15
+
+	CID_USER_STATE_TMPGRP_SUBS_REQ			= 0x0820;	//增加群组临时状态订阅  bob 2016.12.15
+	CID_USER_STATE_TMPGRP_UNSUBS_REQ		= 0x0822;	//取消群组临时状态订阅  bob 2016.12.15
+	
+	CID_USER_STATE_TMPORGTREE_SUBS_REQ		= 0x0830;	//增加组织架构节点临时状态订阅  bob 2016.12.15
+	CID_USER_STATE_TMPORGTREE_UNSUBS_REQ	= 0x0832;	//取消组织架构节点临时状态订阅  bob 2016.12.15	
+	
+	CID_COMPANY_ORG_UPDATE_NOTIFY           = 0x0840;   //公司组织架构更新通知
+}
+
+enum DBProxyCmdID{
+	S_CID_DB_COMPANY_INFO_REQ               = 0x0901;   //公司基本信息
+	S_CID_DB_COMPANY_INFO_RSP               = 0x0902;   //公司基本信息返回
+	S_CID_DB_USER_INFO_REQ                  = 0x0903;   //用户基本信息
+	S_CID_DB_USER_INFO_RSP                  = 0x0904;   //用户基本信息返回
+	S_CID_DB_USER_FRIEND_LIST_REQ           = 0x0905;   //用户好友列表
+	S_CID_DB_USER_FRIEND_LIST_RSP           = 0x0906;   //用户好友列表返回
+	S_CID_DB_USER_FRIEND_VER_REQ            = 0x0907;   //用户好友更新时间
+	S_CID_DB_USER_FRIEND_VER_RSP            = 0x0908;   //用户好友更新时间返回
+	S_CID_DB_USER_GROUP_LIST_REQ            = 0x0909;   //用户群组列表
+	S_CID_DB_USER_GROUP_LIST_RSP            = 0x090a;   //用户群组列表返回
+	S_CID_DB_GROUP_MEMBER_REQ               = 0x090b;   //群成员列表
+	S_CID_DB_GROUP_MEMBER_RSP               = 0x090c;   //群成员列表返回
+	S_CID_DB_COMPANY_USER_LIST_REQ          = 0x090d;   //公司所有用户列表
+	S_CID_DB_COMPANY_USER_LIST_RSP          = 0x090e;   //公司所有用户返回
+	S_CID_DB_ORGTREE_REQ                    = 0x0911;   //公司orgtree请求
+	S_CID_DB_ORGTREE_RSP                    = 0x0912;   
+    S_CID_DB_ORG_UPDATE_REQ                 = 0x0913;   //DB广播的组织架构更新通知
+    S_CID_DB_ORG_UPDATE_RSP                 = 0x0914;
+}
+
+
+
+//=============================================================================
+// 其他常量及公用结构
+// 
+//=============================================================================
+
+// 操作是否成功枚举
+enum OptResultCode{
+	OPT_RESULT_SUCCESS = 1;  //操作陈功
+	OPT_RESULT_FAIL = 2;	 //操作失败	
+}
+
+
+// 服务端使用
+enum ResultType{
+	// 服务端-服务端
+	REFUSE_REASON_NO_MSG_SERVER		 = 1;	//消息服务不存在
+	REFUSE_REASON_MSG_SERVER_FULL 	 = 2;	//消息服务器已满
+	REFUSE_REASON_NO_DB_SERVER		 = 3;	//数据库服务端不存在
+	REFUSE_REASON_NO_LOGIN_SERVER	 = 4;	//登录服务器不存在
+	REFUSE_REASON_NO_ROUTE_SERVER	 = 5;	//路由服务器不存在
+	SERVER_REG_SUCCESSED  	         = 6;	//服务器向路由节点注册成功
+	SERVER_REG_FAILED   	         = 7;	//服务器向路由节点注册失败
+	RESULT_REQ_SUCCESSED             = 8;  //业务执行成功(统一的通用定义)
+}
+
+// 登录结果
+enum LoginResultCode{
+	// 服务端-客户端
+	RESULT_LOGIN_SUCCESSED 			 = 1;	//登录成功
+	RESULT_LOGIN_USER_OR_PWS_ERROR	 = 2;	//用户不存在或密码错误
+	RESULT_LOGIN_VALIDATE_ERROR		 = 3;	//未知错误
+	RESULT_LOGIN_LOGOUT_SUCCESSED	 = 4;	//登出成功
+}
+
+
+enum KickReasonType{
+	KICK_REASON_DUPLICATE_USER = 1;
+    KICK_REASON_OTHER_KICK    = 2;
+}
+
+enum OnlineListType{
+	ONLINE_LIST_TYPE_FRIEND_LIST = 1;
+}
+
+enum UserStatType{
+	USER_STATUS_ONLINE 	= 1;
+	USER_STATUS_OFFLINE	= 2;
+	USER_STATUS_LEAVE	= 3;
+
+}
+
+// 会话类型
+enum SessionType{
+	SESSION_TYPE_SINGLE  = 1;          	//单点
+	SESSION_TYPE_MULTICHAT = 2;			//多人会话	
+	SESSION_TYPE_ORGGROUP = 3;			//组织架构群
+}
+
+// 联系人操作
+enum BuddyOptType{
+	//客户端使用
+	OPT_ADD_FRQUENT_CONTACT = 1;			//添加常用联系人
+	OPT_DEL_FRQUENT_CONTACT = 2;			//删除常用联系人
+	OPT_DEL_RECENT_CONTACT = 3; 			//删除最近联系人
+	//服务端使用
+	OPT_SINGLE_ADD_FRQUENT_CONTACT = 4;		//单向添加常用联系人
+	OPT_DEL_RECENT_CONTACT_GROUP = 5;		//删除最近联系群
+}
+
+//消息类型
+//不再区分对话还是群组,消息类型是通用的 bob 2016.06.28
+enum MsgType{
+	MSG_TYPE_TEXT    = 0x01;
+    MSG_TYPE_AUDIO   = 0x02;
+    MSG_TYPE_FILE    = 0x03; 	// + bob 2016.06.28 文件类型
+    MSG_TYPE_DIR     = 0x04; 	// + bob 2016.06.28 目录
+    MSG_TYPE_PIC     = 0x05; 	// + bob 2016.06.28 图片
+	MSG_TYPE_VIDEO   = 0x06; 	// + bob 2016.06.28 视频文件
+	MSG_TYPE_EXTEND  = 0x07; 	// + bob 2016.06.28 扩展类型
+	MSG_TYPE_APP_CUSTOM = 0x50;	//App 推送消息 bob 2017.04.27
+}
+
+// << add start 消息属性  by YDQ  2016-08-10
+enum MsgProperty {
+	MSG_PTOPERTY_NONE  = 0x01;			//正常消息
+	MSG_PROPERTY_RECEIPT = 0x02;		//回执消息
+	MSG_PROPERTY_URGENT = 0x03;			//紧急消息		
+	MSG_PROPERTY_QUOTE = 0x04;			//引用消息
+	MSG_PROPERTY_RECALL = 0x05;			//消息撤回
+}
+// << add end
+
+// << add start P2P消息类型(正在输入、抖屏...)
+enum P2PMsgCmdType {
+	P2P_MSG_TYPE_SHAKE = 1;
+	P2P_MSG_TYPE_TYPE = 2;
+}
+// << add end
+
+//客户端类型
+enum ClientType{
+	CLIENT_TYPE_PC			= 0x01;//用于判断终端类型
+	CLIENT_TYPE_WINDOWS     = 0x05;
+    CLIENT_TYPE_MAC         = 0x09;
+	CLIENT_TYPE_MOBILE		= 0x02;//用于判断终端类型
+    CLIENT_TYPE_IOS         = 0x06;
+    CLIENT_TYPE_ANDROID     = 0x10;
+    CLIENT_TYPE_WP		    = 0x14;	// + bob 2016.06.28 Windows phone (预留)
+}
+
+//群组类型 
+enum GroupType{
+	GROUP_TYPE_MULTICHAT	= 0x01; // 多人会话
+	GROUP_TYPE_ORG			= 0x02;	// + bob 组织架构群
+}
+
+// 群操作类型
+enum GroupMemberOptType{
+	GROUP_MEMBER_OPT_ADD		= 0x01;	//添加成员
+	GROUP_MEMBER_OPT_DEL		= 0x02; //删除成员
+	GROUP_MEMBER_OPT_MODIFY 	= 0x03; //成员信息修改
+}
+
+enum ListItemOptType{
+	LIST_ITEM_SHOW   	    = 0x01; //显示	只针对群
+	LIST_ITEM_HIDE		    = 0x02; //隐藏  只针对群
+	LIST_ITEM_FIXTOP       = 0x03;  //置顶
+	LIST_ITEM_UNFIXTOP     = 0x04;  //取消置顶
+}
+
+// << 文件传输方式（在线、离线）
+enum TransferFileType{
+    FILE_TYPE_ONLINE        = 0x01;
+    FILE_TYPE_OFFLINE       = 0x02;
+}
+
+// << 文件状态
+enum ClientFileState{
+    CLIENT_FILE_PEER_READY  = 0x00;
+    CLIENT_FILE_CANCEL      = 0x01;
+    CLIENT_FILE_REFUSE      = 0x02;
+    CLIENT_FILE_DONE        = 0x03;
+}
+
+enum ClientFileRole{
+    CLIENT_REALTIME_SENDER  = 0x01;
+    CLIENT_REALTIME_RECVER  = 0x02;
+    CLIENT_OFFLINE_UPLOAD   = 0x03;
+    CLIENT_OFFLINE_DOWNLOAD = 0x04;
+}
+
+enum FileServerError{
+    FILE_SERVER_ERRNO_OK                                = 0x00;
+    FILE_SERVER_ERRNO_CREATE_TASK_ID_ERROR              = 0x01;
+    FILE_SERVER_ERRNO_CREATE_TASK_ERROR                 = 0x02;
+    FILE_SERVER_ERRNO_LOGIN_INVALID_TOKEN               = 0x03;
+    FILE_SERVER_ERRNO_INVALID_USER_FOR_TASK             = 0x04;
+    FILE_SERVER_ERRNO_PULL_DATA_WITH_INVALID_TASK_ID    = 0x05;
+    FILE_SERVER_ERRNO_PULL_DATA_ILLIEAGE_USER           = 0x06;
+    FILE_SERVER_ERRNO_PULL_DATA_MKDIR_ERROR             = 0x07;
+    FILE_SERVER_ERRNO_PULL_DATA_OPEN_FILE_ERROR         = 0x08;
+    FILE_SERVER_ERRNO_PULL_DATA_READ_FILE_HEADER_ERROR  = 0x09;
+    FILE_SERVER_ERRNO_PULL_DATA_ALLOC_MEM_ERROR         = 0x0a;
+    FILE_SERVER_ERRNO_PULL_DATA_SEEK_OFFSET_ERROR       = 0x0b;
+    FILE_SERVER_ERRNO_PULL_DATA_FINISHED                = 0x0c;
+}
+
+//服务器通知客户端更新类型
+enum ServerNotifyType{
+	NOTIFY_TYPE_CONTACT = 0x001;
+	NOTIFY_TYPE_GROUP = 0x02;
+	NOTIFY_TYPE_RECENT = 0x03;
+}
+
+message IpAddr{
+	required string ip = 1;
+	required uint32 port = 2;
+}
+
+// << 用户详情信息
+message UserInfo{
+	required uint32 company_id = 1;		//+ bob 企业ID
+	required uint32 user_id = 2;
+	required uint32 user_gender = 3; 	// 用户性别,男：1 女：2 人妖/外星人：0
+	required string user_nick_name = 4;	//绰号
+	required string avatar_url = 5;
+    required uint64 avatar_update_time = 6;      //+ bob 头像版本号
+	required string email = 7;
+	required string user_real_name = 8;	//真名
+	required string user_mobile = 9;	//手机
+	required string user_tel = 10;		//座机
+	required string user_english_name = 11;
+    required uint32 status = 12;        //0:在职  1. 试用期 2. 正式 3. 离职 4.实习,  client端需要对“离职”进行不展示
+	required uint32 user_borndate = 13; //用户生日
+	required uint64 update_time = 14;	
+	required uint32 work_id = 15;	//工号
+    required string pos_json = 16;    //部门职位信息      
+    optional string sign_info = 17;	 //
+}
+
+
+// << add start	by YDQ 	2016-08-04
+//最近联系人项
+message RecentContactInfo{
+	required uint32 company_id = 1;		
+	required uint32 contact_id = 2;			// UserID or GroupID 
+	required SessionType session_type = 3;
+	required uint64 contact_info_update_time = 4;
+	required string contact_name = 5;		// 姓名
+	required string contact_remark = 6;		// 备注
+	required uint32 user_gender = 7; 	// 用户性别,男：1 女：2 人妖/外星人：0
+	required bool is_fixtop = 8;
+	required uint32 top_order = 9;	
+}
+
+message RecentFixTop{
+	required uint32 company_id = 1;		
+	required uint32 user_id = 2;			// UserID or GroupID 
+	required uint64 update_time = 3;
+	required string contact_remark = 4;		// 备注
+	required uint32 user_gender = 5; 		// 用户性别,男：1 女：2 人妖/外星人：0
+	required uint32 top_order = 6;			// 
+}
+
+// 常用(单点)列表Item基本信息
+message FrequentContactInfo{
+	required uint32 company_id = 1;		
+	required uint32 contact_id = 2;			// UserID 
+	required string contact_name = 3;		// 姓名
+	required string contact_nick_name = 4;	// 备注昵称
+	required string avatar_url = 5;
+	required uint32 user_gender = 6; 	// 用户性别,男：1 女：2 人妖/外星人：0
+	required uint64 last_update_time = 7;
+	required bool is_delete = 8;		//是否删除标志 2016.11.08增加
+}
+// << add end
+
+//用户状态信息
+message UserStat{
+	required uint32 company_id = 1;		//+ bob 企业ID
+	required uint32 user_id = 2;
+	required UserStatType status = 3;
+	optional string	custom_status = 20;		//预留：自定义状态
+}
+
+// 
+message UserIdItem{
+	required uint32 company_id = 1;		//+ bob 企业ID
+	required uint32 user_id = 2;
+}
+
+//服务器保存的用户状态信息
+message ServerUserStat{
+	required uint32 company_id = 1;		//+ bob 企业ID
+	required uint32 user_id = 2;
+	required UserStatType status = 3;
+	required ClientType client_type = 4;
+}
+
+
+//==========================================================
+// 消息信息子结构
+//==========================================================
+// 消息字体信息
+// font_style |= _bBold ? 0x01 : 0;
+// font_style |= _bItalic ? 0x02 : 0;
+// font_style |= _bUnderLine ? 0x03 : 0;
+// 
+// _bBold = font_style & 0x01 ? true : false;
+// _bItalic = font_style & 0x02 ? true ； false;
+// _bUnderLine = font_style & 0x03 ? true : false;
+message MsgFont{
+	required string font_name = 1;
+	required uint32 font_size = 2;	
+	required uint32 font_color = 3;
+	required uint32 font_style = 4;	// Bold、Italic、UnderLine
+}
+
+// 文件信息JSON格式,使用时按照此格式组装成字符串
+// {
+//	 "filename": "demo.mp4",
+//	 "md5": "dcc4514484c10342f3ce0ae9da0a529b",
+//	 "filesize": "2048",
+//	 "imgWidth": "",
+//	 "imgHegith": "",
+//	 "duration": "60"
+// }
+
+// Msg Item
+message MsgItem{
+	required IM.BaseDefine.MsgType msg_type = 1;	//消息类型
+	required string msg_data = 2;	//消息内容(如果是文件，则msg_data表示的是JSON格式的文件信息串)
+}
+
+// Msg Data
+message MsgData{
+	required string msg_id = 1;				//消息ID
+	required uint32 from_company_id = 2;	
+	required uint32 from_user_id = 3;		//消息发送方
+	required uint32 to_company_id = 4;
+	required uint32 to_user_id = 5;			//消息接收方(groupId or userID)
+	required SessionType session_type = 6;	//会话类型
+	required uint64 create_time = 7;		//消息时间
+	repeated MsgItem msg_content = 8;		//消息内容
+	required MsgFont msg_font = 9; 		//消息字体信息
+	required uint32 msg_status = 10;	 // 0-未读(未回执)，1-已读(已回执)
+	optional MsgProperty msg_property = 11; //消息属性(正常消息、回执消息、紧急消息)	
+	repeated UserIdItem force_push_ids_list = 15;	//群组消息强制推送列表(被@对象id列表)	
+}
+
+message OfflineMsgCntInfo{
+	required uint32 msg_cnt = 1;		// 消息数量
+	required MsgData lastest_msg_data = 2;
+}
+
+//==========================================================
+// 群组信息子结构
+//==========================================================
+message GroupListItem{
+    required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;
+	required GroupType group_type = 3;
+	required uint64 update_time = 4;			//服务器最新的更新时间戳
+	
+}
+
+message GroupMemberItem{
+    required uint32 company_id = 1;			//企业ID
+	required uint32 member_id = 2;
+	required string member_name = 3;	
+	required uint32 member_role = 4;  //群成员角色(0-群主，1-管理员，2-普通成员) 
+	required bool 	is_delete = 5;	  //是否删除标志
+}
+
+// 群基本信息
+message GroupInfo{
+    required uint32 company_id = 1;			//企业ID
+	required uint32 group_id = 2;
+	required uint64 update_time = 3;	
+	required string group_name = 4;
+	optional string group_avatar = 5;
+	required uint32 group_creator_id = 6;
+	required GroupType group_type = 7;
+	optional uint32 shield_status = 8;		//1: shield  0: not shield 
+	required uint32 group_member_count = 9;	//群成员个数
+	optional bool 	is_delete    	= 10;	//是否删除标志 bob 2016.11.08
+	optional uint32 fixtop_priority =11;    //非置顶为0，置顶次序依据值大小排序
+	optional uint32 show            =12;    //是否显示
+	optional string topic           =13;    //主题
+	optional bool 	not_disturb		=14;	//免打扰
+}
+
+message UserTokenInfo{
+    required uint32 company_id = 1;			//企业ID
+    required uint32 user_id = 2;
+	required ClientType user_type = 3;
+	required string token = 4;
+	required uint32 push_count = 5;
+	required uint32 push_type = 6;			//1: 正常推送  	2:无打扰式推送
+}
+
+message PushResult{
+	required string user_token = 1;
+	required uint32 result_code = 2;
+}
+
+message ShieldStatus{
+    required uint32 company_id = 1;			//企业ID
+	required uint32 user_id = 2;		
+	required uint32 group_id = 3;	
+	required uint32 shield_status = 4;		//1: shield  0: not shield 
+}
+
+message OfflineFileInfo{
+    required uint32 company_id = 1;			//企业ID
+    required uint32 from_user_id = 2;
+    required string task_id = 3;
+    required string file_name = 4;
+    required uint32 file_size = 5;
+}
+
+
+message PushShieldStatus{
+    required uint32 company_id = 1;			//企业ID
+    required uint32 user_id = 2;
+    required uint32 shield_status = 3;		//1: shield  0: not shield
+}
+
+//加好友申请信息
+message IMBuddyReqInfo{				
+	required uint32 user_id = 1;				//发出申请的id      
+	required uint32 company_id =2;
+	required uint32 dest_user_id = 3;				//被申请的id    
+	required uint32 dest_company_id =4;
+	required uint32 req_stat = 5;		//请求状态（请求中，同意，拒绝）
+	required uint64 req_time = 6;
+	required string remark = 7;
+}
+
+
+//=============================================================================
+// 服务器发送给客户端的更新通知
+// 客户端收到后,根据类型向服务器拉取更新内容
+//
+//=============================================================================
+
+// 单点更新通知
+message IMSinglePullNotify{
+	required uint32 type = 1;		// 最近联系人 = 0，常用 = 1，联系人请求 = 2	
+}
+
+// 群组更新通知
+message IMGroupPullNotify{
+	required uint32 type = 1;		// 群信息变更、群成员变更
+	required uint32 company_id =2;
+	required uint32 group_id= 3;
+}
+
+message IMUserAuthority{
+    required uint32 auth_id = 1; //权限ID
+    required string auth_value = 2; //权限值    auth_value以及ext_valueN值及含义依据不同的auth_id定义而不同,auth_id为固定值定义
+    optional string ext_value1 = 3; //权限值
+	optional string ext_value2 = 4; //权限值
+	optional string ext_value3 = 5; //权限值
+	optional string ext_value4 = 6; //权限值
+}
+
+message IMUserRole{
+    required uint32 role_id = 1;  //角色ID
+    required string role_name = 2;  //角色名称
+    repeated IMUserAuthority authority = 3; //该角色所拥有的权限范围
+}

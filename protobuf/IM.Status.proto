@@ -1,0 +1,78 @@
+//=============================================================================
+// 在线状态协议
+// 更新日期: 2016.08.04
+// 更新人:bob
+//
+// 更新历史:
+//-------------------------------------
+//
+//=============================================================================
+
+syntax = "proto2";
+
+package IM.Status;
+import "IM.BaseDefine.proto";
+option java_package = "com.dtl.im.protobuf";
+//option java_outer_classname = "MOGUJIEIMMessage";
+option optimize_for = LITE_RUNTIME;
+
+
+//service id:	0x0020
+
+message IMMsgServReq{
+	//CID_LOGIN_REQ_CONNECTIONSERVER
+	//cmd id:		0x0101
+	//获取可用链接服务器
+	
+	optional uint32 company_id = 1;	//+ bob 2016.06.28 企业ID
+}
+
+message IMMsgServRes{
+	//cmd id:		0x0102
+	//CID_LOGIN_RES_CONNECTIONSERVER
+	//返回可用链接服务器
+	
+	required IM.BaseDefine.ResultType result_code = 1;
+	optional string ip = 2;					//链接服务器IP
+	optional uint32 port = 3;				//链接服务器port
+	optional string backip_ip = 4; 			//备选链接服务器IP
+	optional uint32 backip_port = 5;		//备选链接服务器port
+}
+
+
+// 一旦设置以后，22:00 -- 07:00不发送
+message IMPushShieldReq {
+    //cmd id:			0x010c
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required uint32 shield_status = 3;// 1:开启，0：关闭
+    optional bytes attach_data = 20;  // 服务端用，客户端不用设置
+}
+
+message IMPushShieldRsp {
+    //cmd id:			0x010d
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required uint32 result_code = 3;			// 值： 0:successed 1:failed
+    optional uint32 shield_status = 4;          // 值： 如果result_code值为0(successed)，则shield_status值设置， 1:开启， 0:关闭
+
+    optional bytes attach_data = 20;            // 服务端用，客户端不用设置
+}
+
+// 如果用户重新安装app，第一次启动登录成功后，app主动查询
+// 服务端返回IMQueryPushShieldRsp
+message IMQueryPushShieldReq {
+    //cmd id:			0x010e
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    optional bytes attach_data = 20;// 服务端用，客户端不用设置
+}
+
+message IMQueryPushShieldRsp {
+    //cmd id:			0x010f
+	required uint32 company_id = 1;						//+ bob 2016.06.28 企业ID
+    required uint32 user_id = 2;
+    required uint32 result_code = 3;			// 值： 0:successed 1:failed
+    optional uint32 shield_status = 4;          // 值： 如果result_code值为0(successed)，则shield_status值设置， 1:开启， 0:关闭
+    optional bytes attach_data = 20;
+}
